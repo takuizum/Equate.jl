@@ -3,6 +3,11 @@ uuid = "1f4a9958-6928-474c-bcb2-b5c430b26db6"
 authors = ["Takumi Shibuya"]
 version = "0.1.0"
 
+[deps]
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+GLM = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+
 [compat]
 julia = "1.3"
 
