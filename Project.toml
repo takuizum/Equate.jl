@@ -1,0 +1,13 @@
+name = "Equate"
+uuid = "1f4a9958-6928-474c-bcb2-b5c430b26db6"
+authors = ["Takumi Shibuya"]
+version = "0.1.0"
+
+[compat]
+julia = "1.3"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
