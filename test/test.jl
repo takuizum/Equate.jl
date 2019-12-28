@@ -31,3 +31,14 @@ e𝒀x(ftX, ftY; case = :upper) |> print
 e𝒀x(ftX, ftY; case = :lower) |> print
 e𝒀x(ftX, ftY; case = :both) |> print
 e𝒀x(ftX, ftY; case = :middle) |> print
+
+ftX.tab.freq
+ftX.tab.scale
+
+fit1 = glm(eval(Meta.parse("@formula(freq ~ scale^1 + scale^2)")), ftX.tab, Poisson(), LogLink())
+fit1 = presmoothing(ftX)
+predict(fit1)
+using Plots
+plot(ftX.tab.scale, predict(fit1))
+histogram!(X; bins = length(X), alpha = 0.5)
+# link[https://github.com/JuliaStats/StatsModels.jl/blob/master/docs/src/formula.md]
