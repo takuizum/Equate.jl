@@ -2,14 +2,14 @@ module Equate
 
 using DataFrames, Statistics, GLM, Distributions, Optim
 
-export freqtab, round2, PRF, CDF, PFu, PFl, equipercentile, presmoothing, linear, Tucker, ChainedLinear, ObservableStats, FrequencyEstimation, KernelSmoothing, BandwidthPenalty, EstBandwidth
+export freqtab, round2, PRF, CDF, PFu, PFl, Equipercentile, presmoothing, Linear, Tucker, ChainedLinear, ObservableStats, FrequencyEstimation, KernelSmoothing, BandwidthPenalty, EstBandwidth, BraunHolland, ChainedEquipercentile
 export LogLinearFormula
 
 abstract type EquateDesign end
-abstract type EGD <: EquateDesign end
-abstract type NGD <: EquateDesign end
+abstract type EG <: EquateDesign end
+abstract type NEAT <: EquateDesign end
 # non equivalent common item design
-struct FreqTab <: EGD
+struct FreqTab <: EG
     tab::DataFrame
     raw::Vector
     interval::Float64
@@ -24,18 +24,16 @@ function freqtab(X; interval = 1.0, scale = minimum(X):interval:maximum(X))
 end
 
 # Equate method
-abstract type EquateMethod end
-struct Equipercentile <:EquateMethod end
-struct Linear <: EquateMethod end
+abstract type SGEquateMethod end
 # Natural Round
 round2(x; digits = 0) = sign(x) * floor( abs(x) * 10.0^digits + 0.5 ) / (10.0^digits)
 # Percentile Rank Function
-function CDF(x, F::FreqTab)
+function CDF(x, F::EG)
     if x < minimum(F.tab.scale) return 0 end
     if x > maximum(F.tab.scale) return 1 end
     F.tab.cumprob[F.tab.scale .== x][1]
 end
-function PRF(x, F::FreqTab)
+function PRF(x, F::EG)
     if x < (minimum(F.tab.scale) - F.interval/2.0) return 0.0 end
     if x ≥ (maximum(F.tab.scale) + F.interval/2.0) return 100.0 end
     x′ = round2(x)
@@ -45,7 +43,7 @@ function PRF(x, F::FreqTab)
     return P
 end
 # Percentile Function
-function p_search_descend(P, F::FreqTab, offset)
+function p_search_descend(P, F::EG, offset)
     x = nothing;iter = length(F.tab.scale)
     while x == nothing
         iter -= 1
@@ -53,7 +51,7 @@ function p_search_descend(P, F::FreqTab, offset)
     end
     return x
 end
-function p_search_ascend(P, F::FreqTab, offset)
+function p_search_ascend(P, F::EG, offset)
     x = nothing;iter = 0
     while x == nothing
         iter += 1
@@ -61,26 +59,29 @@ function p_search_ascend(P, F::FreqTab, offset)
     end
     return x
 end
-function PFu(P, F::FreqTab)
+function PFu(P, F::EG)
     if P ≥ 100.0 return (maximum(F.tab.scale) + .5) end
     xu = P > 50.0 ? p_search_descend(P, F, 1) : p_search_ascend(P, F, 0)
     x = (P/100 - CDF(xu-F.interval, F)) / (CDF(xu, F) - CDF(xu-F.interval, F))
     return isinf(x) || isnan(x) ? xu -F.interval/2.0 : x + xu -F.interval/2.0
 end
-function PFl(P, F::FreqTab)
+function PFl(P, F::EG)
     if P ≤ 0.0 return -.5 end
     xl = P > 50.0 ? p_search_descend(P, F, 0) : p_search_ascend(P, F, -1)
     x = (P/100 - CDF(xl, F)) / (CDF(xl+F.interval, F) - CDF(xl, F))
     return isinf(x) ? xl + F.interval/2.0 : x + xl + F.interval/2.0
 end
 # equipercentile equating
-function equipercentile(X::FreqTab, Y::FreqTab; case = :middle)
+struct ResultEquipercentile <: SGEquateMethod
+    table::DataFrame
+end
+function Equipercentile(X::EG, Y::EG; case = :middle)
     scaleY = Y.tab.scale
     eYxu = zeros(Float64, length(scaleY)); eYxl = zeros(Float64, length(scaleY))
     for (i,v) in enumerate(scaleY)
-        P = PRF(v, X)
-        eYxu[i] = PFu(P, Y)
-        eYxl[i] = PFl(P, Y)
+        P = PRF(v, Y)
+        eYxu[i] = PFu(P, X)
+        eYxl[i] = PFl(P, X)
     end
     if case == :upper
         eYx = eYxu
@@ -91,15 +92,20 @@ function equipercentile(X::FreqTab, Y::FreqTab; case = :middle)
     elseif case == :middle
         eYx = (eYxu .+ eYxl) ./ 2.0
     end
-    return DataFrame(scaleY = scaleY, eYx = eYx)
+    tbl = DataFrame(scaleY = scaleY, eYx = eYx)
+    return ResultEquipercentile(tbl)
 end
 # linear equating
-function linear(X::FreqTab, Y::FreqTab)
+struct ResultLinear <: SGEquateMethod
+    table::DataFrame
+end
+function Linear(X::EG, Y::EG)
     μX = mean(X.raw); σX = std(X.raw)
     μY = mean(Y.raw); σY = std(Y.raw)
     slope = σY/σX; intercept = μY - slope*μX
     eYx = @. X.tab.scale * slope + intercept
-    return DataFrame(scaleX = X.tab.scale, eYx = eYx)
+    tbl = DataFrame(scaleX = X.tab.scale, eYx = eYx)
+    ResultLinear(tbl)
 end
 # LogLinear Transformation
 function LogLinearFormula(df)
@@ -114,22 +120,28 @@ function LogLinearFormula(df)
     end
     return eval(Meta.parse(fml))
 end
+struct SmoothedFreqTab <: EG
+    tab::DataFrame
+    raw::Vector
+    interval::Float64
+end
 function presmoothing(F::FreqTab; fml = LogLinearFormula(4))
     fit1 = glm(fml, F.tab, Poisson(), LogLink())
     pred = predict(fit1, DataFrame(scale = F.tab.scale))
     tab = DataFrame(scale = F.tab.scale, prob = pred, cumprob = cumsum(pred))
-    return FreqTab(tab, F.raw, F.interval), fit1
+    return SmoothedFreqTab(tab, F.raw, F.interval), fit1
 end
 # Kernel method
 function RjX(x, xⱼ, a, μ, hX)
     return (x - a * xⱼ - (1-a)*μ) / (a*hX)
 end
-struct KernelFreqTab
+struct KernelFreqTab <: EG
     tab::DataFrame
     raw::Vector
     interval::Float64
+    Bandwidth::Float64
 end
-function KernelSmoothing(X::FreqTab; kernel = :Gaussian, hX = 0.66, scale = X.tab.scale)
+function KernelSmoothing(X::EG; kernel = :Gaussian, hX = 0.66, scale = X.tab.scale)
     # hX = bandwidht of cumulative distribution function
     μ = mean(X.raw); σ² = var(X.raw)
     a² = σ² / (σ² + hX^2)
@@ -141,9 +153,9 @@ function KernelSmoothing(X::FreqTab; kernel = :Gaussian, hX = 0.66, scale = X.ta
         FhX[i] += X.tab.prob[j]*cdf.(Normal(0, 1), RjX(x, xⱼ, a, μ, hX))
     end
     tbl = DataFrame(scale = scale, prob = 𝒇hX, cumprob = cumsum(𝒇hX))
-    return KernelFreqTab(tbl, X.raw, X.interval)
+    return KernelFreqTab(tbl, X.raw, X.interval, hX)
 end
-function BandwidthPenalty(hX, X::FreqTab; kernel = :Gaussian)
+function BandwidthPenalty(hX, X::EG; kernel = :Gaussian)
     hX = exp(hX[1])
     r = X.tab.prob
     μ = mean(X.raw); σ² = var(X.raw)
@@ -159,7 +171,7 @@ function BandwidthPenalty(hX, X::FreqTab; kernel = :Gaussian)
     pen1 = sum((r .- 𝒇hX) .^2)
     return pen1
 end
-function EstBandwidth(X::FreqTab; kernel = :Gaussian)
+function EstBandwidth(X::EG; kernel = :Gaussian)
     opt = optimize(hX -> BandwidthPenalty(hX, X), [0.5], method = BFGS())
     println("Minimizer sould be transformed `exp()` before interpretation. Minimizer = $(exp(opt.minimizer[1]))")
     return opt
@@ -167,7 +179,8 @@ end
 
 
 # equivalent group design
-struct SGFreqTab <: NGD
+abstract type NEATEquateMethod end
+struct SGFreqTab <: NEAT
     tabX::DataFrame
     tabV::DataFrame
     rawX::Vector # independent form
@@ -194,19 +207,19 @@ function freqtab(X, V;intervalX = 1.0, intervalV = 1.0, scaleX = minimum(X):inte
     return SGFreqTab(tabX, tabV, X, V, intervalX, intervalV, marginaltable)
 end
 # Nonequivalent Groups : Linear methods
-function ObservableStats(F::SGFreqTab)
+function ObservableStats(F::NEAT)
     x = F.rawX; v = F.rawV
     μx = mean(x); σx = std(x)
     μv = mean(v); σv = std(v)
     covxv = cov(x, v); corxv = cor(x, v)
     return μx, σx, μv, σv, covxv, corxv
 end
-struct resTucker
+struct ResultTucker <: NEATEquateMethod
     table::DataFrame
-    synsetic::DataFrame
+    synthetic::DataFrame
     estimates::NamedTuple
 end
-function Tucker(X::SGFreqTab, Y::SGFreqTab; w₁ = length(X.rawX) / (length(X.rawX) + length(Y.rawX)), w₂ = 1.0 - w₁)
+function Tucker(X::NEAT, Y::NEAT; w₁ = length(X.rawX) / (length(X.rawX) + length(Y.rawX)), w₂ = 1.0 - w₁)
     W = w₁ + w₂
     w₁ = w₁ / W; w₂ = w₂ / W
     # test score
@@ -216,28 +229,28 @@ function Tucker(X::SGFreqTab, Y::SGFreqTab; w₁ = length(X.rawX) / (length(X.ra
     μx, σx, μxv, σxv, covxv, corxv = ObservableStats(X)
     μy, σy, μyv, σyv, covyv, coryv = ObservableStats(Y)
     # regression slope
-    γ₁ = cov(x,xv) / var(xv)
-    γ₂ = cov(y,yv) / var(yv)
-    # synsetic mean and var
+    γ₁ = covxv / σxv^2
+    γ₂ = covyv / σyv^2
+    # synthetic mean and var
     μsX = μx - w₂*γ₁*(μxv-μyv)
     μsY = μy + w₁*γ₂*(μxv-μyv)
     σ²sX = σx^2 - w₂*γ₁^2*(σxv^2-σyv^2) + w₁*w₂*γ₁^2*(μxv-μyv)^2
     σ²sY = σy^2 + w₁*γ₂^2*(σxv^2-σyv^2) + w₁*w₂*γ₂^2*(μxv-μyv)^2
     # transformation
     slope = sqrt(σ²sY)/sqrt(σ²sX); intercept = μsY - slope*μsX
-    eYx = @. X.tabX.scale * slope + intercept
-    tbl = DataFrame(scaleX = X.tabX.scale, eYx = eYx)
-    return resTucker(tbl,
-                     DataFrame(Group = [1, 2], μ = [μsX, μsY], σ = [sqrt(σ²sX), sqrt(σ²sY)], γ = [γ₁, γ₂], w = [w₁, w₂]),
-                     (slope = slope, intercept = intercept))
+    lYx = @. X.tabX.scale * slope + intercept
+    tbl = DataFrame(scaleX = X.tabX.scale, lYx = lYx)
+    return ResultTucker(tbl,
+                       DataFrame(Group = [1, 2], μ = [μsX, μsY], σ = [sqrt(σ²sX), sqrt(σ²sY)], γ = [γ₁, γ₂], w = [w₁, w₂]),
+                       (slope = slope, intercept = intercept))
 end
 # Nonequivalent Goups : Chained linear Observed Score Equating
-struct resChainedLinear
+struct ResultChainedLinear <: NEATEquateMethod
     table::DataFrame
-    synsetic::DataFrame
+    synthetic::DataFrame
     estimates::NamedTuple
 end
-function ChainedLinear(X::SGFreqTab, Y::SGFreqTab)
+function ChainedLinear(X::NEAT, Y::NEAT)
     # ******************************************** #
     # 1. put X on the scale of V -call lV(x);
     # 2. put V on the scale of Y - call lY(v);
@@ -250,25 +263,25 @@ function ChainedLinear(X::SGFreqTab, Y::SGFreqTab)
     μx, σx, μxv, σxv, covxv, corxv = ObservableStats(X)
     μy, σy, μyv, σyv, covyv, coryv = ObservableStats(Y)
     # regression slope
-    γ₁ = covxv / σxv^2
-    γ₂ = covyv / σyv^2
+    γ₁ = σx / σxv
+    γ₂ = σy / σyv
     # estimate
     slope = (σy/σyv)/(σx/σxv)
     intercept = μy + σy/σyv *(μxv - μyv) - slope * μx
-    eYx = @. X.tabX.scale * slope + intercept
-    tbl =  DataFrame(scaleX = X.tabX.scale, eYx = eYx)
-    resChainedLinear(tbl,
-                     DataFrame(Group = [1,2], γ = [γ₁, γ₂]),
-                     (slope = slope, intercept = intercept))
+    lYx = @. X.tabX.scale * slope + intercept
+    tbl =  DataFrame(scaleX = X.tabX.scale, lYx = lYx)
+    ResultChainedLinear(tbl,
+                        DataFrame(Group = [1,2], γ = [γ₁, γ₂]),
+                        (slope = slope, intercept = intercept))
 end
 # Nonequivalent Goups : Frequency Estimation
-struct resFrequencyEstimation
+struct ResultFrequencyEstimation <: NEATEquateMethod
     table::DataFrame
     marginalX::Matrix
     marginalY::Matrix
 end
-function FrequencyEstimation(X::SGFreqTab, Y::SGFreqTab; w₁ = length(X.rawX) / (length(X.rawX) + length(Y.rawX)), w₂ = 1.0 - w₁)
-    # synsetic weight
+function FrequencyEstimation(X::NEAT, Y::NEAT; w₁ = length(X.rawX) / (length(X.rawX) + length(Y.rawX)), w₂ = 1.0 - w₁)
+    # synthetic weight
     W = w₁ + w₂
     w₁ = w₁ / W; w₂ = w₂ / W
     # prior (the weights from common part)
@@ -283,7 +296,7 @@ function FrequencyEstimation(X::SGFreqTab, Y::SGFreqTab; w₁ = length(X.rawX) /
     for j in 1:length(Y.tabX.scale)
         g₁y[j] = Y.marginal[j,:]' * h₁
     end
-    # synsetic population
+    # synthetic population
     fsx = @. w₁ * X.tabX.freq + w₂ * f₂x
     fsy = @. w₁ * g₁y + w₂ * Y.tabX.freq
     # Equipercentile Equating
@@ -292,8 +305,74 @@ function FrequencyEstimation(X::SGFreqTab, Y::SGFreqTab; w₁ = length(X.rawX) /
     ftY = FreqTab(DataFrame(scale = Y.tabX.scale, freq = fsy, cumprob = cumsum(fsy) ./ sum(fsy)),
                   Y.rawX, Y.intervalX)
     tbl = equipercentile(ftX, ftY)
-    resFrequencyEstimation(tbl, X.marginal, Y.marginal)
+    return ResultFrequencyEstimation(tbl, X.marginal, Y.marginal)
+end
+# Nonequivalent Groups : Braun-Holland Linear Method
+struct ResultBraunHolland <: NEATEquateMethod
+    table::DataFrame
+    marginalX::Matrix
+    marginalY::Matrix
+end
+function BraunHolland(X::NEAT, Y::NEAT; w₁ = length(X.rawX) / (length(X.rawX) + length(Y.rawX)), w₂ = 1.0 - w₁)
+    # synthetic weight
+    W = w₁ + w₂
+    w₁ = w₁ / W; w₂ = w₂ / W
+    # prior (the weights from common part)
+    J = length(X.tabV.freq)
+    h₁ = X.tabV.freq / sum(X.tabV.freq)
+    h₂ = Y.tabV.freq / sum(Y.tabV.freq)
+    f₂x = zeros(Float64, length(X.tabX.freq))
+    g₁y = zeros(Float64, length(Y.tabX.freq))
+    for j in 1:length(X.tabX.scale)
+        f₂x[j] = X.marginal[j,:]' * h₂
+    end
+    for j in 1:length(Y.tabX.scale)
+        g₁y[j] = Y.marginal[j,:]' * h₁
+    end
+    # synthetic population
+    fsx = @. w₁ * X.tabX.freq + w₂ * f₂x; fsx = fsx ./ sum(fsx)
+    fsy = @. w₁ * g₁y + w₂ * Y.tabX.freq; fsy = fsy ./ sum(fsy)
+    # synthetic pupulation parameter
+    μsx = fsx' * X.tabX.scale; σsx = sqrt(fsx' * (X.tabX.scale .- μsx) .^2)
+    μsy = fsy' * Y.tabX.scale; σsy = sqrt(fsy' * (Y.tabX.scale .- μsy) .^2)
+    μxv = mean(X.rawV); σxv = std(X.rawV)
+    μyv = mean(Y.rawV); σyv = std(Y.rawV)
+    # internal regression parameter
+    γ₁ = σsx / σxv; γ₂ = σsy / σyv
+    # external regression parameter
+    slope = γ₂ / γ₁; intercept = μsy + σsy/σyv*(μxv-μyv) - slope * μsx
+    lYx = @. X.tabX.scale * slope + intercept
+    tbl = DataFrame(scaleX = X.tabX.scale, lYx = lYx)
+    return ResultBraunHolland(tbl, X.marginal, Y.marginal)
 end
 
+# Nonequivalent Groups : Chained Equipercentile Method
+struct ResultChainedEquipercentile <: NEATEquateMethod
+    table::DataFrame
+end
+function ChainedEquipercentile(X::NEAT, Y::NEAT; case = :middle)
+    #
+    ftX = freqtab(X.rawX); ftXV = freqtab(X.rawV)
+    eV₁ = Equipercentile(ftX, ftXV)
+    eY₂ = Equipercentile(freqtab(Y.rawV), freqtab(Y.rawX))
+    # Search percentile of score V on scale Y
+    eYxu = zeros(Float64, length(eY₂.table.scaleY)); eYxl = zeros(Float64, length(eY₂.table.scaleY))
+    for (i,v) in enumerate(eY₂.table.eYx)
+        P = PRF(v, ftXV)
+        eYxu[i] = PFu(P, ftX)
+        eYxl[i] = PFl(P, ftX)
+    end
+    if case == :upper
+        eYx = eYxu
+    elseif case == :lower
+        eYx = eYxl
+    elseif case == :both
+        eYx = string.(eYxu, "_", eYxl)
+    elseif case == :middle
+        eYx = (eYxu .+ eYxl) ./ 2.0
+    end
+    tbl = DataFrame(scaleY = eY₂.table.scaleY, eYx = eYx)
+    return ResultChainedEquipercentile(tbl)
+end
 #-----------------
 end # module
