@@ -1,7 +1,7 @@
 module Equate
 
 using DataFrames, Statistics, Distributions
-using Optim: optimize, BFGS
+using Optim#: optimize, BFGS
 using GLM#: glm, predict, @formula, Loglink
 
 export
