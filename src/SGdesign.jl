@@ -92,7 +92,7 @@ function Linear(X::EG, Y::EG)
     μX = mean(X.raw); σX = std(X.raw)
     μY = mean(Y.raw); σY = std(Y.raw)
     slope = σY/σX; intercept = μY - slope*μX
-    eYx = @. X.tab.scale * slope + intercept
-    tbl = DataFrame(scaleX = X.tab.scale, eYx = eYx)
+    lYx = @. X.tab.scale * slope + intercept
+    tbl = DataFrame(scaleX = X.tab.scale, lYx = lYx)
     ResultLinear(tbl)
 end
