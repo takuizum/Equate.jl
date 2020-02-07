@@ -56,3 +56,14 @@ tmp = Template(;
 generate("Equate",tmp)
 
 --->
+
+
+# Version Update History
+
+### 0.1.0
+
+Reverse equating direction to match the result to R's `equate` package. 
+
+### 0.1.0
+
+A first release.
