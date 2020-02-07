@@ -60,12 +60,12 @@ Equipercentile Equating under equivalent (single) group design. The smoothed fre
 - `:middle` (default) Use midpoint case upper between lower.
 """
 function Equipercentile(X::EG, Y::EG; case = :middle)
-    scaleY = Y.tab.scale
-    eYxu = zeros(Float64, length(scaleY)); eYxl = zeros(Float64, length(scaleY))
-    for (i,v) in enumerate(scaleY)
-        P = PRF(v, Y)
-        eYxu[i] = PFu(P, X)
-        eYxl[i] = PFl(P, X)
+    scaleX = X.tab.scale
+    eYxu = zeros(Float64, length(scaleX)); eYxl = zeros(Float64, length(scaleX))
+    for (i,v) in enumerate(scaleX)
+        P = PRF(v, X)
+        eYxu[i] = PFu(P, Y)
+        eYxl[i] = PFl(P, Y)
     end
     if case == :upper
         eYx = eYxu
@@ -76,7 +76,7 @@ function Equipercentile(X::EG, Y::EG; case = :middle)
     elseif case == :middle
         eYx = (eYxu .+ eYxl) ./ 2.0
     end
-    tbl = DataFrame(scaleY = scaleY, eYx = eYx)
+    tbl = DataFrame(scaleX = scaleX, eYx = eYx)
     return ResultEquipercentile(tbl)
 end
 # linear equating
