@@ -53,7 +53,7 @@ end
 
 Returns Kernel smoothed frequency table as `KernelFreqTab`.
 
-In the kernel smoothing, the choice of bandwidth `hX` is an important consicderation. When bandwidth is large, the smoothed distribution becomes linear equating fucnction. Contrary, bandwidth is small, it becomes spilye shaped distribution. We recommend to use default value `hX = 6.22` or select it by using `EstBandwidth`
+In the kernel smoothing, the choice of bandwidth `hX` is an important consicderation. When bandwidth is large, the smoothed distribution becomes linear equating fucnction. Contrary, bandwidth is small, it becomes spikye shaped distribution. We recommend to use default value `hX = 6.22` or select it by using `EstBandwidth`
 """
 function KernelSmoothing(X::EG; kernel = :Gaussian, hX = 0.622, scale = X.tab.scale)
     # hX = bandwidht of cumulative distribution function
