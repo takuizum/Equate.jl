@@ -60,7 +60,7 @@ generate("Equate",tmp)
 
 # Version Update History
 
-### 0.1.0
+### 0.1.1
 
 Reverse equating direction to match the result to R's `equate` package. 
 
