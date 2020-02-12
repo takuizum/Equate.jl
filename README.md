@@ -60,9 +60,16 @@ generate("Equate",tmp)
 
 # Version Update History
 
+### 0.1.2
+
+*A new feature*
+- `Linear` and `BraunHolland` functions were updated to return not only the concordance table but also equating coefficients.
+
+- Change specification of arguments of `presmoothing`, `fml`, as the non named arg.
+
 ### 0.1.1
 
-Reverse equating direction to match the result to R's `equate` package. 
+Reverse equating direction to match the result to R's `equate` package.
 
 ### 0.1.0
 
