@@ -156,6 +156,7 @@ struct ResultBraunHolland <: NEATEquateMethod
     table::DataFrame
     marginalX::Matrix
     marginalY::Matrix
+    estimates::NamedTuple
 end
 """
     BraunHolland(X::NEAT, Y::NEAT; w₁ = length(X.rawX) / (length(X.rawX) + length(Y.rawX)), w₂ = 1.0 - w₁)
@@ -190,7 +191,7 @@ function BraunHolland(X::NEAT, Y::NEAT; w₁ = length(X.rawX) / (length(X.rawX) 
     slope = γ₂ / γ₁; intercept = μsy + σsy/σyv*(μxv-μyv) - slope * μsx
     lYx = @. X.tabX.scale * slope + intercept
     tbl = DataFrame(scaleX = X.tabX.scale, lYx = lYx)
-    return ResultBraunHolland(tbl, X.marginal, Y.marginal)
+    return ResultBraunHolland(tbl, X.marginal, Y.marginal, (slope = slope, intercept = intercept))
 end
 
 # Nonequivalent Groups : Chained Equipercentile Method
