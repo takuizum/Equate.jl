@@ -82,6 +82,7 @@ end
 # linear equating
 struct ResultLinear <: SGEquateMethod
     table::DataFrame
+    estimates::NamedTuple
 end
 """
     Linear(X::EG, Y::EG)
@@ -94,5 +95,5 @@ function Linear(X::EG, Y::EG)
     slope = σY/σX; intercept = μY - slope*μX
     lYx = @. X.tab.scale * slope + intercept
     tbl = DataFrame(scaleX = X.tab.scale, lYx = lYx)
-    ResultLinear(tbl)
+    ResultLinear(tbl, (slope = slope, intercept = intercept))
 end
