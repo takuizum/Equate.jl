@@ -31,7 +31,7 @@ Returns presmoothed frequency table as `SmoothedFreqTab` and `glm` fitted object
 
 Preserving first C moments of original frequency data, passed `LogLinearFormula(C)` to `fml`.
 """
-function presmoothing(F::EG; fml = LogLinearFormula(4))
+function presmoothing(F::EG, fml)
     fit1 = glm(fml, F.tab, Poisson(), LogLink())
     freq = predict(fit1, DataFrame(scale = F.tab.scale))
     tab = DataFrame(scale = F.tab.scale, freq = freq, cumfreq = cumsum(freq),
