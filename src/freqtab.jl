@@ -43,6 +43,14 @@ function freqtab(X, V;intervalX = 1.0, intervalV = 1.0, scaleX = minimum(X):inte
     if length(X) != length(V)
         println("X and V must be same length(test scores of which the same group).")
     end
+    # missing data hangling
+    if any(ismissing.(X)) || any(ismissing.(V))
+        println("There are more than one missing value in X or V. Use the listwise deletion.")
+        x_key = X .!== missing
+        v_key = V .!== missing
+        X = X[x_key]
+        V = V[v_key]
+    end
     freqx = map(j -> count(i -> i == j, X), scaleX)
     cumprobx = cumsum(freqx)./ sum(freqx)
     freqv = map(j -> count(i -> i == j, V), scaleV)
