@@ -61,5 +61,4 @@ include("freqtab.jl")
 include("SGdesign.jl")
 include("NEATdesign.jl")
 include("Smoothing.jl")
-#-----------------
 end # module
