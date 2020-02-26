@@ -48,8 +48,8 @@ function freqtab(X, V;intervalX = 1.0, intervalV = 1.0, scaleX = minimum(X):inte
         println("There are more than one missing value in X or V. Use the listwise deletion.")
         x_key = X .!== missing
         v_key = V .!== missing
-        X = X[x_key]
-        V = V[v_key]
+        X = X[x_key .& x_key]
+        V = V[v_key .& v_key]
     end
     freqx = map(j -> count(i -> i == j, X), scaleX)
     cumprobx = cumsum(freqx)./ sum(freqx)
