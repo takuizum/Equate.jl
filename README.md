@@ -60,9 +60,23 @@ generate("Equate",tmp)
 
 # Version Update History
 
-### 0.1.0
+### 0.1.3
 
-Reverse equating direction to match the result to R's `equate` package. 
+*New features*
+
+- The listwise deletion for missing values is implemented.
+
+- **Experimental** Add descriptions about compat in `Priject.toml`.
+
+### 0.1.2
+
+- `Linear` and `BraunHolland` functions were updated to return not only the concordance table but also equating coefficients.
+
+- Change specification of arguments of `presmoothing`, `fml`, as the non named arg.
+
+### 0.1.1
+
+Reverse equating direction to match the result to R's `equate` package.
 
 ### 0.1.0
 

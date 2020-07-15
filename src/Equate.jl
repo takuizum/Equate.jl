@@ -83,4 +83,5 @@ and more...
 """
 Equate
 #-----------------
+=======
 end # module
