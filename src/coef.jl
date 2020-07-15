@@ -19,3 +19,5 @@ end
 Return equating coefficient. The input onject is equated result under the SG design method.
 """
 function coef(x::SGEquateMethod)
+    #
+end
