@@ -35,10 +35,14 @@ end
 # Frequency table for nonequivalent gtoup design.
 """
     freqtab(X, V;intervalX = 1.0, intervalV = 1.0, scaleX = minimum(X):intervalX:maximum(X), scaleV = minimum(V):intervalV:maximum(V))
+
 Create `SGFreqTab` for NEAT design.
 
-    - `X` Vector of raw score, except missing values, of target test.
-    - `V` Vector of raw score, except missing values, of anchor test.
+# Arguments
+
+- `X` Vector of raw score, except missing values, of target test.
+- `V` Vector of raw score, except missing values, of anchor test.
+
 """
 function freqtab(X, V;intervalX = 1.0, intervalV = 1.0, scaleX = minimum(X):intervalX:maximum(X), scaleV = minimum(V):intervalV:maximum(V))
     if length(X) != length(V)
@@ -67,10 +71,13 @@ end
 # Frequency table from smoothed frequency table.
 """
     freqtab(X::EG, V::EG)
+
 Create `SGFreqTab` which has been smoothed (Log Linear or Kernel method).
 
-    - `X` Smoothed `FreqTab` of target test.
-    - `V` Smoothed `FreqTab` of anchor test.
+# Arguments
+
+- `X` Smoothed `FreqTab` of target test.
+- `V` Smoothed `FreqTab` of anchor test.
 """
 function freqtab(X::EG, V::EG)
     marginaltable = zeros(Int64, length(X.tab.scale), length(V.tab.scale))
