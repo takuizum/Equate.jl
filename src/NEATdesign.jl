@@ -38,7 +38,7 @@ function Tucker(X::NEAT, Y::NEAT; w₁ = length(X.rawX) / (length(X.rawX) + leng
     tbl = DataFrame(scaleX = X.tabX.scale, lYx = lYx)
     return ResultTucker(tbl,
                        DataFrame(Group = [1, 2], μ = [μsX, μsY], σ = [sqrt(σ²sX), sqrt(σ²sY)], γ = [γ₁, γ₂], w = [w₁, w₂]),
-                       (slope = slope, intercept = intercept))
+                       (slope = slope, intercept = intercept));
 end
 # Nonequivalent Groups : Levine under a classical congeneric model
 struct ResultLevineCongeneric
@@ -207,7 +207,7 @@ function ChainedEquipercentile(X::NEAT, Y::NEAT; case = :middle)
     eV₁ = Equipercentile(ftX, ftXV)
     eY₂ = Equipercentile(freqtab(Y.rawV), freqtab(Y.rawX))
     # Search percentile of score V on scale Y
-    eYxu = zeros(Float64, length(eY₂.table.scaleY)); eYxl = zeros(Float64, length(eY₂.table.scaleY))
+    eYxu = zeros(Float64, length(eY₂.table.scaleX)); eYxl = zeros(Float64, length(eY₂.table.scaleX))
     for (i,v) in enumerate(eY₂.table.eYx)
         P = PRF(v, ftXV)
         eYxu[i] = PFu(P, ftX)
@@ -222,7 +222,7 @@ function ChainedEquipercentile(X::NEAT, Y::NEAT; case = :middle)
     elseif case == :middle
         eYx = (eYxu .+ eYxl) ./ 2.0
     end
-    tbl = DataFrame(scaleY = eY₂.table.scaleY, eYx = eYx)
+    tbl = DataFrame(scaleY = eY₂.table.scaleX, eYx = eYx)
     return ResultChainedEquipercentile(tbl)
 end
 #-----------------

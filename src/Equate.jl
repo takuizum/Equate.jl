@@ -1,8 +1,10 @@
 module Equate
 
-using DataFrames, Statistics, Distributions
-using Optim#: optimize, BFGS
-using GLM#: glm, predict, @formula, Loglink
+using DataFrames
+using Statistics: mean, std, cov, cor
+using Distributions: Poisson
+using Optim: optimize, BFGS
+using GLM: glm, predict, @formula, LogLink
 
 export
     # Basic function
@@ -21,6 +23,9 @@ export
     # Smoothing functions
     presmoothing,
     KernelSmoothing,
+
+    # Utility functions
+    coef,
 
     # Support functions
     round2,
@@ -61,4 +66,22 @@ include("freqtab.jl")
 include("SGdesign.jl")
 include("NEATdesign.jl")
 include("Smoothing.jl")
+include("coef.jl")
+
+"""
+    A Julia package for test equating.
+
+Major features:
+
+* Single Group (SG)* design
+
+- `Linear` provides the linear equating.
+- `Equipercentile` provides the equipercentile equating.
+
+and more...
+
+"""
+Equate
+#-----------------
+=======
 end # module
