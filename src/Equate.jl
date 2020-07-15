@@ -5,7 +5,8 @@ using DataFrames
 using Statistics: mean, std, cov, cor
 using Distributions: Poisson
 using Optim: optimize, BFGS
-using GLM: glm, predict, @formula, LogLink
+using GLM: glm, predict, @formula, LogLink, coef
+using RecipesBase: @recipe
 
 export
     # Basic function
@@ -70,13 +71,14 @@ include("NEATdesign.jl")
 include("Smoothing.jl")
 include("coef.jl")
 include("ExpandTable.jl")
+# include("recipe.jl")
 
 """
     A Julia package for test equating.
 
 Major features:
 
-* Single Group (SG)* design
+*Single Group (SG)* design
 
 - `Linear` provides the linear equating.
 - `Equipercentile` provides the equipercentile equating.
