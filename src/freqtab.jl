@@ -7,6 +7,7 @@ end
 # Frequaency table for equivalent group design
 """
     freqtab(X; interval = 1.0, scale = minimum(X):interval:maximum(X))
+    
 Create `FreqTab`, which is used for all equating methods in Equate package, for SG design.
 
     - `X` Vector of raw test score that dose not contain missing value.
