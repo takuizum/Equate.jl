@@ -1,4 +1,5 @@
 module Equate
+# =======
 
 using DataFrames
 using Statistics: mean, std, cov, cor
@@ -26,6 +27,7 @@ export
 
     # Utility functions
     coef,
+    ExpandTable,
 
     # Support functions
     round2,
@@ -67,6 +69,7 @@ include("SGdesign.jl")
 include("NEATdesign.jl")
 include("Smoothing.jl")
 include("coef.jl")
+include("ExpandTable.jl")
 
 """
     A Julia package for test equating.
@@ -82,6 +85,5 @@ and more...
 
 """
 Equate
-#-----------------
-=======
+# =======
 end # module
