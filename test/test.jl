@@ -1,33 +1,6 @@
-using Distributions, Random
-
-Random.seed!(1234)
-X = rand(Poisson(100), 100)
-Y = rand(Poisson(90), 100)
-
-# Freqtab
-ftX = freqtab(X)
-# CDF
-CDF(100, ftX)
-CDF(0, ftX)
-
-# PRF
-t = PRF(120, ftX)
-PRF(-1, ftX)
-PRF(0, ftX)
-PRF(200, ftX)
-PRF(101, ftX)
-
-# PF
-PFu(100, ftX)
-PFu(101, ftX)
-PFu(40, ftX)
-PFl(40, ftX)
-PFl(80, ftX)
-
-
 # Equipercentile Equating
 using CSV
-ACTmath = CSV.read("test/ACTmath.csv")
+ACTmath = CSV.read("data/ACTmath.csv")
 X = fill.(ACTmath.scale, ACTmath.xcount) |> Iterators.flatten |> collect
 Y = fill.(ACTmath.scale, ACTmath.ycount) |> Iterators.flatten |> collect
 ftX = freqtab(X); ftY = freqtab(Y)
@@ -62,7 +35,6 @@ plot(KftX.tab.scale, KftX.tab.prob; label = "bandwidth = 0.66")
 plot!(ftX.tab.scale, ftX.tab.prob; label = "observed probability")
 # Choice bandwidth
 BandwidthPenalty(0.7, ftX)
-
 opt.minimizer[1] |> exp |> print
 
 # Smoothed SG
