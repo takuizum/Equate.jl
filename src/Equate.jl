@@ -24,6 +24,9 @@ export
     presmoothing,
     KernelSmoothing,
 
+    # Utility functions
+    coef,
+
     # Support functions
     round2,
     PRF,
@@ -63,5 +66,21 @@ include("freqtab.jl")
 include("SGdesign.jl")
 include("NEATdesign.jl")
 include("Smoothing.jl")
+include("coef.jl")
+
+"""
+    A Julia package for test equating.
+
+Major features:
+
+* Single Group (SG)* design
+
+- `Linear` provides the linear equating.
+- `Equipercentile` provides the equipercentile equating.
+
+and more...
+
+"""
+Equate
 #-----------------
 end # module
