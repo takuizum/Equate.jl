@@ -1,8 +1,10 @@
 module Equate
 
-using DataFrames, Statistics, Distributions
-using Optim#: optimize, BFGS
-using GLM#: glm, predict, @formula, Loglink
+using DataFrames
+using Statistics: mean, std, cov, cor
+using Distributions: Poisson
+using Optim: optimize, BFGS
+using GLM: glm, predict, @formula, LogLink
 
 export
     # Basic function
