@@ -6,6 +6,7 @@ using Statistics: mean, std, cov, cor
 using Distributions: Poisson
 using Optim: optimize, BFGS
 using GLM: glm, predict, @formula, LogLink, coef
+using StatsModels: TableRegressionModel
 using RecipesBase: @recipe
 
 export
@@ -71,7 +72,7 @@ include("NEATdesign.jl")
 include("Smoothing.jl")
 include("coef.jl")
 include("ExpandTable.jl")
-# include("recipe.jl")
+include("recipe.jl")
 
 """
     A Julia package for test equating.

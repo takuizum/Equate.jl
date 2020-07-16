@@ -59,7 +59,7 @@ KBneatY = DataFrame!(load("data/KBneatY.csv"))
 ftX = freqtab(KBneatX.total, KBneatX.anchor)
 ftY = freqtab(KBneatY.total, KBneatY.anchor)
 sum(ftX.marginal)
-heatmap(ftX.marginal, color = :plasma)
+heatmap(ftX.marginal, color = cgrad([:white,:gray,:black]))
 
 #Tucker
 resTk = Tucker(ftX, ftY)
@@ -73,7 +73,7 @@ plot!(resCL.table.scaleX, resCL.table.lYx; label = "Chained Linear", xlabel = "s
 # Frequency estimation
 ftm = ftX.marginal
 resFE = FrequencyEstimation(ftX, ftY)
-plot!(resFE.table.eYx, resFE.table.scaleY; label = "Frequency Estimation", xlabel = "scale X", ylabel = "scale Y")
+plot!(resFE.table.scaleX, resFE.table.eYx; label = "Frequency Estimation", xlabel = "scale X", ylabel = "scale Y")
 
 # Braun & Holland
 resBH = BraunHolland(ftX, ftY)
