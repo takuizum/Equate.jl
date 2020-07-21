@@ -122,3 +122,8 @@ plot(resTk)
 
 ftX = freqtab(KBneatX.total)
 KftX = KernelSmoothing(ftX; hX = 0.66)
+plot(KftX)
+
+smftX = presmoothing(ftX, LogLinearFormula(6))
+plot(smftX)
+plot(smftX, smfit)
