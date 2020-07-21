@@ -23,6 +23,7 @@ struct SmoothedFreqTab <: EG
     tab::DataFrame
     raw::Vector
     interval::Float64
+    fit
 end
 """
     presmoothing(F::FreqTab; fml = LogLinearFormula(df::Int64))
@@ -36,7 +37,7 @@ function presmoothing(F::EG, fml)
     freq = predict(fit1, DataFrame(scale = F.tab.scale))
     tab = DataFrame(scale = F.tab.scale, freq = freq, cumfreq = cumsum(freq),
                     pred = freq ./ sum(freq), cumprob = cumsum(freq) ./ sum(freq))
-    return SmoothedFreqTab(tab, F.raw, F.interval), fit1
+    return SmoothedFreqTab(tab, F.raw, F.interval, fit1)
 end
 # Kernel method
 function RjX(x, xⱼ, a, μ, hX)
@@ -57,6 +58,7 @@ In the kernel smoothing, the choice of bandwidth `hX` is an important considerat
 """
 function KernelSmoothing(X::EG; kernel = :Gaussian, hX = 0.622, scale = X.tab.scale)
     # hX = bandwidht of cumulative distribution function
+    N = sum(X.tab.freq)
     μ = mean(X.raw); σ² = var(X.raw)
     a² = σ² / (σ² + hX^2)
     a = sqrt(a²)
@@ -66,7 +68,7 @@ function KernelSmoothing(X::EG; kernel = :Gaussian, hX = 0.622, scale = X.tab.sc
         𝒇hX[i] += X.tab.prob[j]*pdf.(Normal(0, 1), RjX(x, xⱼ, a, μ, hX)) / (a*hX)
         FhX[i] += X.tab.prob[j]*cdf.(Normal(0, 1), RjX(x, xⱼ, a, μ, hX))
     end
-    tbl = DataFrame(scale = scale, prob = 𝒇hX, cumprob = cumsum(𝒇hX))
+    tbl = DataFrame(scale = scale, freq = N .* 𝒇hX, cunfreq = cumsum(N .* 𝒇hX), prob = 𝒇hX, cumprob = cumsum(𝒇hX))
     return KernelFreqTab(tbl, X.raw, X.interval, hX)
 end
 function BandwidthPenalty(hX, X::EG; kernel = :Gaussian)

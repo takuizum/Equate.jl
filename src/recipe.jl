@@ -1,5 +1,5 @@
 @recipe function f(x::SmoothedFreqTab, fit::TableRegressionModel)
-    label --> "Smoothed degree = $(length(GLM.coef(fit))-1)"
+    label --> "Smoothed degree = $(length(coef(fit))-1)"
     x.tab.scale, predict(fit)
 end
 
@@ -8,7 +8,7 @@ end
     x.tab.scale, x.tab.freq
 end
 
-@recipe function f(f::KernelFreqTab)
+@recipe function f(x::KernelFreqTab)
     label --> "Kernel smoothed observed probability"
     x.tab.scale, x.tab.freq
 end
