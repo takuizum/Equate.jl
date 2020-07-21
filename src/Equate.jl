@@ -2,8 +2,8 @@ module Equate
 # =======
 
 using DataFrames
-using Statistics: mean, std, cov, cor
-using Distributions: Poisson
+using Statistics: mean, std, cov, cor, var
+using Distributions: Poisson, Normal, pdf, cdf
 using Optim: optimize, BFGS
 using GLM: glm, predict, @formula, LogLink, coef
 using StatsModels: TableRegressionModel
