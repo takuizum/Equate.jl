@@ -62,8 +62,9 @@ abstract type EG <: EquateDesign end
 Non-Equivalent group with Anchor Test design.
 """
 abstract type NEAT <: EquateDesign end
-abstract type SGEquateMethod end
-abstract type NEATEquateMethod end
+abstract type EquateMethod end
+abstract type SGEquateMethod <: EquateMethod end
+abstract type NEATEquateMethod <: EquateMethod end
 
 include("freqtab.jl")
 include("SGdesign.jl")
@@ -102,5 +103,5 @@ According to von Davier, Holland, and Thayer (2004), the test equating has separ
 
 """
 Equate
-# =======
+#-----------------
 end # module
