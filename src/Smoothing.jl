@@ -59,7 +59,7 @@ function KernelSmoothing(X::EG; kernel = :Gaussian, hX = 0.622, scale = X.tab.sc
     # hX = bandwidht of cumulative distribution function
     μ = mean(X.raw); σ² = var(X.raw)
     a² = σ² / (σ² + hX^2)
-    a =sqrt(a²)
+    a = sqrt(a²)
     𝒇hX = zeros(Float64, length(scale))
     FhX = zeros(Float64, length(scale))
     for (i, x) in enumerate(scale), (j, xⱼ) in enumerate(X.tab.scale)

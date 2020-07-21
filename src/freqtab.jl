@@ -44,6 +44,7 @@ Create `SGFreqTab` for NEAT design.
 
 - `X` Vector of raw score, except missing values, of target test.
 - `V` Vector of raw score, except missing values, of anchor test.
+
 """
 function freqtab(X, V;intervalX = 1.0, intervalV = 1.0, scaleX = minimum(X):intervalX:maximum(X), scaleV = minimum(V):intervalV:maximum(V))
     if length(X) != length(V)

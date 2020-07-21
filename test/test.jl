@@ -1,8 +1,8 @@
 # Equipercentile Equating
 using CSVFiles, DataFrames
 ACTmath = DataFrame!(load("data/ACTmath.csv"))
-X = ExpandTable(ACTmath.scale, ACTmath.xcount)
-Y = ExpandTable(ACTmath.scale, ACTmath.ycount)
+X = fill.(ACTmath.scale, ACTmath.xcount) |> Iterators.flatten |> collect
+Y = fill.(ACTmath.scale, ACTmath.ycount) |> Iterators.flatten |> collect
 ftX = freqtab(X); ftY = freqtab(Y);
 Equipercentile(ftX, ftY; case = :upper) |> print
 Equipercentile(ftX, ftY; case = :lower) |> print
@@ -18,8 +18,7 @@ Linear(ftX, ftY).table.lYx |> print
 using CSVFiles, DataFrames, GLM
 KBneatX = DataFrame!(load("data/KBneatX.csv"))
 ftX = freqtab(KBneatX.total)
-fml = LogLinearFormula(6)
-ftXsmoothed, fit1 = presmoothing(ftX, fml)
+ftXsmoothed, fit1 = presmoothing(ftX; fml = LogLinearFormula(6))
 predict(fit1)
 using Plots
 plot(ftXsmoothed.tab.scale, predict(fit1), label = "Smoothed degree = 6")
@@ -27,8 +26,8 @@ plot!(ftX.tab.scale, ftX.tab.freq; label = "observed probability")
 # link[https://github.com/JuliaStats/StatsModels.jl/blob/master/docs/src/formula.md]
 
 # Kernel Smoothing
-using CSVFiles, DataFrames
-KBneatX = DataFrame!(load("data/KBneatX.csv"))
+using CSV
+KBneatX = CSV.read("test/KBneatX.csv")
 ftX = freqtab(KBneatX.total)
 KftX = KernelSmoothing(ftX; hX = 0.66)
 using Plots
@@ -39,10 +38,10 @@ BandwidthPenalty(0.7, ftX)
 opt.minimizer[1] |> exp |> print
 
 # Smoothed SG
-using CSVFiles, DataFrames
-ACTmath = DataFrame!(load("data/ACTmath.csv"))
-X = ExpandTable(ACTmath.scale, ACTmath.xcount)
-Y = ExpandTable(ACTmath.scale, ACTmath.ycount)
+using CSV
+ACTmath = CSV.read("test/ACTmath.csv")
+X = fill.(ACTmath.scale, ACTmath.xcount) |> Iterators.flatten |> collect
+Y = fill.(ACTmath.scale, ACTmath.ycount) |> Iterators.flatten |> collect
 ftX, fit1 = presmoothing(freqtab(X); fml = LogLinearFormula(4))
 ftY, fit2 = presmoothing(freqtab(Y); fml = LogLinearFormula(4))
 Equipercentile(ftX, ftY)
@@ -53,13 +52,13 @@ Equipercentile(ftX, ftY)
 
 # Nonequivalent group design
 using CSVFiles, DataFrames
-KBneatX = DataFrame!(load("data/KBneatX.csv"))
-KBneatY = DataFrame!(load("data/KBneatY.csv"))
+KBneatX = DataFrame!(load(("test/KBneatX.csv"))
+KBneatY = DataFrame!(load(("test/KBneatY.csv"))
 
 ftX = freqtab(KBneatX.total, KBneatX.anchor)
 ftY = freqtab(KBneatY.total, KBneatY.anchor)
 sum(ftX.marginal)
-heatmap(ftX.marginal, color = cgrad([:white,:gray,:black]))
+heatmap(ftX.marginal, color = :plasma)
 
 #Tucker
 resTk = Tucker(ftX, ftY)
@@ -73,7 +72,7 @@ plot!(resCL.table.scaleX, resCL.table.lYx; label = "Chained Linear", xlabel = "s
 # Frequency estimation
 ftm = ftX.marginal
 resFE = FrequencyEstimation(ftX, ftY)
-plot!(resFE.table.scaleX, resFE.table.eYx; label = "Frequency Estimation", xlabel = "scale X", ylabel = "scale Y")
+plot!(resFE.table.eYx, resFE.table.scaleY; label = "Frequency Estimation", xlabel = "scale X", ylabel = "scale Y")
 
 # Braun & Holland
 resBH = BraunHolland(ftX, ftY)
@@ -108,14 +107,3 @@ resFE = FrequencyEstimation(ftX, ftY)
 
 resCE = ChainedEquipercentile(ftX, ftY)
 coef(resCE)
-
-# Plot recipe
-using CSVFiles, DataFrames, GLM
-KBneatX = DataFrame!(load("data/KBneatX.csv"))
-ftX = freqtab(KBneatX.total)
-fml = LogLinearFormula(6)
-ftXsmoothed, fit1 = presmoothing(ftX, fml)
-using Plots
-plot(ftXsmoothed, fit1)
-plot!(ftXsmoothed)
-
