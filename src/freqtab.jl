@@ -10,9 +10,11 @@ end
     
 Create `FreqTab`, which is used for all equating methods in Equate package, for SG design.
 
-    - `X` Vector of raw test score that dose not contain missing value.
-    - `interval` The interval size of scale (must be Float64). Default is 1.0
-    - `scale` Vector or StepRange represents a scale of test score X.
+# Arguments
+
+- `X` Vector of raw test score that dose not contain missing value.
+- `interval` The interval size of scale (must be Float64). Default is 1.0
+- `scale` Vector or StepRange represents a scale of test score X.
 """
 function freqtab(X; interval = 1.0, scale = minimum(X):interval:maximum(X))
     freq = map(j -> count(i -> i == j, X), scale)

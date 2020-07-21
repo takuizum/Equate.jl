@@ -50,6 +50,7 @@ struct ResultEquipercentile <: SGEquateMethod
 end
 """
     Equipercentile(X::EG, Y::EG; case = :middle)
+
 Equipercentile Equating under equivalent (single) group design. The smoothed frequency can be used.
 
 `case` represents which equating case use. Pass to the symbols below.
@@ -86,8 +87,9 @@ struct ResultLinear <: SGEquateMethod
 end
 """
     Linear(X::EG, Y::EG)
+
 Linear equating under the equivalent group desing.
-This method, equate to match first 2 moments, is so simple to comprehension equating result.
+This method, equate to match first 2 moments, is so simple to comprehend the equating result.
 """
 function Linear(X::EG, Y::EG)
     μX = mean(X.raw); σX = std(X.raw)

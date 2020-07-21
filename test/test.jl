@@ -107,3 +107,23 @@ resFE = FrequencyEstimation(ftX, ftY)
 
 resCE = ChainedEquipercentile(ftX, ftY)
 coef(resCE)
+
+# Plot recipes
+using Plots
+using CSVFiles, DataFrames
+KBneatX = DataFrame!(load("data/KBneatX.csv"))
+KBneatY = DataFrame!(load("data/KBneatY.csv"))
+
+ftX = freqtab(KBneatX.total, KBneatX.anchor)
+ftY = freqtab(KBneatY.total, KBneatY.anchor)
+
+resTk = Tucker(ftX, ftY)
+plot(resTk)
+
+ftX = freqtab(KBneatX.total)
+KftX = KernelSmoothing(ftX; hX = 0.66)
+plot(KftX)
+
+smftX = presmoothing(ftX, LogLinearFormula(6))
+plot(smftX)
+plot(smftX, smfit)
