@@ -18,7 +18,7 @@ Linear(ftX, ftY).table.lYx |> print
 using CSVFiles, DataFrames, GLM
 KBneatX = DataFrame!(load("data/KBneatX.csv"))
 ftX = freqtab(KBneatX.total)
-ftXsmoothed, fit1 = presmoothing(ftX; fml = LogLinearFormula(6))
+ftXsmoothed, fit1 = presmoothing(ftX, LogLinearFormula(6))
 predict(fit1)
 using Plots
 plot(ftXsmoothed.tab.scale, predict(fit1), label = "Smoothed degree = 6")
@@ -26,16 +26,21 @@ plot!(ftX.tab.scale, ftX.tab.freq; label = "observed probability")
 # link[https://github.com/JuliaStats/StatsModels.jl/blob/master/docs/src/formula.md]
 
 # Kernel Smoothing
-using CSV
-KBneatX = CSV.read("test/KBneatX.csv")
-ftX = freqtab(KBneatX.total)
-KftX = KernelSmoothing(ftX; hX = 0.66)
+using CSVFiles, DataFrames
+ACTmath = DataFrame!(load("data/ACTmath.csv"))
+X = ExpandTable(ACTmath.scale, ACTmath.xcount)
+ftX = freqtab(X; scale = 0:1:40)
+smftX = presmoothing(ftX, LogLinearFormula(6))
+# Choose bandwidth
+optimalbwidth = EstBandwidth(smftX)
+optimalbwidth.minimizer[1]
+
+KftX = KernelSmoothing(smftX; hX = exp(optimalbwidth.minimizer[1]))
+KftX = KernelSmoothing(smftX; hX = 100)
+KftX = KernelSmoothing(smftX; hX = 0.33)
+
 using Plots
-plot(KftX.tab.scale, KftX.tab.prob; label = "bandwidth = 0.66")
-plot!(ftX.tab.scale, ftX.tab.prob; label = "observed probability")
-# Choice bandwidth
-BandwidthPenalty(0.7, ftX)
-opt.minimizer[1] |> exp |> print
+plot(KftX)
 
 # Smoothed SG
 using CSV
