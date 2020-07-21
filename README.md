@@ -19,6 +19,14 @@ Equate test scores under the equivalent or non-equivalent group with anchor test
   - Chained Equipercentile
   - Frequency Estimation (Equipercentile equating using synthetic population)
 
+- Presmoothing
+  - Log linear smoothing with arbitrary degree.
+
+- Kernel smoothong
+  - Gaussian kernel is only supported now.
+  - The optimal bandwidth can be estimated.
+  - 
+
 # How to use (SG design)
 
 1. Prepare data set. Integer or Float vector.
@@ -29,11 +37,15 @@ Equate test scores under the equivalent or non-equivalent group with anchor test
 ftX = freqtab(dataX)
 dfY = freqtab(dataY)
 ```
-3. Equate score X to scale Y.
-4.
+
+3. Presmoothing by using `presmoothing`
+4. (Optional) Continuization by using `KernelSmoothing`
+5. Equate score X to scale Y by arbitrary method.
 ```
 Linear(ftX, ftY)
 ```
+6. (Coming soon...) Evaluate SEE.
+
 
 
 <!---
@@ -60,9 +72,15 @@ generate("Equate",tmp)
 
 # Version Update History
 
-### 0.1.3
+### 0.1.4
 
 *New features*
+
+- Plot recipes. Support `plot` method.
+- Fix `KernelSmoothing` function.
+- Improve penalty function to estimate the optimal bandwidth. Add the penalty related to the derivartive.
+
+### 0.1.3
 
 - The listwise deletion for missing values is implemented.
 
