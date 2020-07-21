@@ -7,7 +7,9 @@ using Distributions: Poisson
 using Optim: optimize, BFGS
 using GLM: glm, predict, @formula, LogLink, coef
 using StatsModels: TableRegressionModel
-using RecipesBase: @recipe
+# import RecipesBase: @recipe, plot
+using RecipesBase
+import StatsBase: coef
 
 export
     # Basic function
