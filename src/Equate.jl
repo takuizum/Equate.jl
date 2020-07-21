@@ -59,8 +59,9 @@ abstract type EG <: EquateDesign end
 Non-Equivalent group with Anchor Test design.
 """
 abstract type NEAT <: EquateDesign end
-abstract type SGEquateMethod end
-abstract type NEATEquateMethod end
+abstract type EquateMethod end
+abstract type SGEquateMethod <: EquateMethod end
+abstract type NEATEquateMethod <: EquateMethod end
 
 include("freqtab.jl")
 include("SGdesign.jl")
@@ -83,5 +84,4 @@ and more...
 """
 Equate
 #-----------------
-=======
 end # module

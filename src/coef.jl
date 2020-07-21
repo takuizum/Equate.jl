@@ -1,10 +1,10 @@
 
 """
-    coef(x::NEATEquateMethod)
+    coef(x::EquateMethod)
 
-Return equating coefficient. The input object is equated result under the NEAT design method.
+Return equating coefficient. The input object is equated result under the SG and NEAT design method.
 """
-function coef(x::NEATEquateMethod)
+function coef(x::EquateMethod)
     if all(isnothing.(match.(r"estimates", string.(fieldnames(typeof(x))))))
         println("$(typeof(x)) has no field `estimates`")
     else
@@ -13,11 +13,3 @@ function coef(x::NEATEquateMethod)
 end
 
 
-"""
-    coef(x::SGEquateMethod)
-
-Return equating coefficient. The input onject is equated result under the SG design method.
-"""
-function coef(x::SGEquateMethod)
-    #
-end
