@@ -30,7 +30,7 @@ using CSVFiles, DataFrames
 ACTmath = DataFrame!(load("data/ACTmath.csv"))
 X = ExpandTable(ACTmath.scale, ACTmath.xcount)
 ftX = freqtab(X; scale = 0:1:40)
-smftX = presmoothing(ftX, LogLinearFormula(6))
+smftX = presmoothing(ftX, LogLinearFormula(4))
 # Choose bandwidth
 optimalbwidth = EstBandwidth(smftX)
 optimalbwidth.minimizer[1]

@@ -55,9 +55,24 @@ end
 
 Returns Kernel smoothed frequency table as `KernelFreqTab`.
 
+# Arguments
+
+- `X` the object which class is `freqtab`
+
+## Optional Arguments
+
+- `kernel`
+- `hX` The band width.
+- `newint` A new interval to depict the continuized probability line.
+
+# Value
+
+`KernelFreqTab`
+
 In the kernel smoothing, the choice of bandwidth `hX` is an important consideration. When bandwidth is large, the smoothed distribution becomes linear equating fucnction. Contrary, bandwidth is small, it becomes spikye shaped distribution. We recommend to use default value `hX = 6.22` or select it by using `EstBandwidth`.
 """
-function KernelSmoothing(X::EG; kernel = :Gaussian, hX = 0.622, scale = X.tab.scale)
+function KernelSmoothing(X::EG; kernel = :Gaussian, hX = 0.622, newint = X.interval/100)
+    scale = (minimum(X.tab.scale) - X.interval/2):newint:(maximum(X.tab.scale) + X.interval/2)
     # hX = bandwidth of cumulative distribution function
     N = sum(X.tab.freq)
     μ = mean(X.raw); σ² = var(X.raw)
