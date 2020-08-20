@@ -26,7 +26,7 @@ struct SmoothedFreqTab <: EG
     fit
 end
 """
-    presmoothing(F::FreqTab; fml = LogLinearFormula(df::Int64))
+    presmoothing(F::FreqTab, LogLinearFormula(df::Int64))
 
 Returns presmoothed frequency table as `SmoothedFreqTab` and `glm` fitted object.
 
