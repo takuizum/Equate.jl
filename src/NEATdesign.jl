@@ -42,7 +42,7 @@ function Tucker(X::NEAT, Y::NEAT; w₁ = length(X.rawX) / (length(X.rawX) + leng
                        (slope = slope, intercept = intercept));
 end
 # Nonequivalent Groups : Levine under a classical congeneric model
-struct ResultLevineCongeneric
+struct ResultLevineCongeneric <: NEATEquateMethod
     table::DataFrame
     synthetic::DataFrame
     estimates::NamedTuple
