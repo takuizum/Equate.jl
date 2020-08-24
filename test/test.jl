@@ -43,12 +43,12 @@ using Plots
 plot(KftX)
 
 # Smoothed SG
-using CSV
-ACTmath = CSV.read("test/ACTmath.csv")
-X = fill.(ACTmath.scale, ACTmath.xcount) |> Iterators.flatten |> collect
-Y = fill.(ACTmath.scale, ACTmath.ycount) |> Iterators.flatten |> collect
-ftX, fit1 = presmoothing(freqtab(X); fml = LogLinearFormula(4))
-ftY, fit2 = presmoothing(freqtab(Y); fml = LogLinearFormula(4))
+using CSVFiles, DataFrames
+ACTmath = DataFrame!(load("data/ACTmath.csv"))
+X = ExpandTable(ACTmath.scale, ACTmath.xcount)
+Y = ExpandTable(ACTmath.scale, ACTmath.ycount)
+ftX = presmoothing(freqtab(X), LogLinearFormula(4))
+ftY = presmoothing(freqtab(Y), LogLinearFormula(4))
 Equipercentile(ftX, ftY)
 
 ftX = KernelSmoothing(freqtab(X))
@@ -57,8 +57,8 @@ Equipercentile(ftX, ftY)
 
 # Nonequivalent group design
 using CSVFiles, DataFrames
-KBneatX = DataFrame!(load(("test/KBneatX.csv"))
-KBneatY = DataFrame!(load(("test/KBneatY.csv"))
+KBneatX = DataFrame!(load("data/KBneatX.csv"))
+KBneatY = DataFrame!(load("data/KBneatY.csv"))
 
 ftX = freqtab(KBneatX.total, KBneatX.anchor)
 ftY = freqtab(KBneatY.total, KBneatY.anchor)
@@ -88,14 +88,10 @@ resCE = ChainedEquipercentile(freqtab(KBneatX.total, KBneatX.anchor), freqtab(KB
 plot!(resCE.table.eYx, resCE.table.scaleY; label = "Chained Equipercentile", xlabel = "scale X", ylabel = "scale Y", legend = :topleft)
 
 # smoothed NEAT
-ftX, fit1 = presmoothing(freqtab(KBneatX.total); fml = LogLinearFormula(6))
-ftXV, fit2 = presmoothing(freqtab(KBneatX.anchor); fml = LogLinearFormula(6))
-ftY, fit3 = presmoothing(freqtab(KBneatY.total); fml = LogLinearFormula(6))
-ftYV, fit4 = presmoothing(freqtab(KBneatY.anchor); fml = LogLinearFormula(6))
-
-ft1 = freqtab(ftX, ftXV)
-ft2 = freqtab(ftY, ftYV)
-ChainedEquipercentile(ft1, ft2)
+# @profview 
+ft1 = presmoothing(ftX, LogLinearFormula(6), LogLinearFormula(6))
+ft2 = presmoothing(ftY, LogLinearFormula(6), LogLinearFormula(6))
+ChainedLinear(ft1, ft2)
 
 # Extract coefficient
 using CSVFiles, DataFrames

@@ -44,6 +44,8 @@ end
 struct SmoothedNEATFreqTab <: NEAT
     tabX
     tabV
+    rawX
+    rawV
     intervalX
     intervalV
     fitX
@@ -70,7 +72,7 @@ function presmoothing(F::NEAT, fmlX, fmlV)
     freqV = predict(fitV, DataFrame(scale = F.tabV.scale))
     tabV = DataFrame(scale = F.tabV.scale, freq = freqV, cumfreq = cumsum(freqV),
                     prob = freqV ./ sum(freqV), cumprob = cumsum(freqV) ./ sum(freqV))
-    return SmoothedNEATFreqTab(tabX, tabV, F.intervalX, F.intervalV, fitX, fitV, F.marginal)
+    return SmoothedNEATFreqTab(tabX, tabV, F.rawX, F.rawV, F.intervalX, F.intervalV, fitX, fitV, F.marginal)
 end
 # Kernel method
 function RjX(x, xⱼ, a, μ, hX)
