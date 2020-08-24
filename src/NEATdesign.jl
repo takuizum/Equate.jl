@@ -164,8 +164,7 @@ end
 # Nonequivalent Groups : Braun-Holland Linear Method
 struct ResultBraunHolland <: NEATEquateMethod
     table::DataFrame
-    marginalX::Matrix
-    marginalY::Matrix
+    synthetic::DataFrame
     estimates::NamedTuple
 end
 """
@@ -209,7 +208,9 @@ function BraunHolland(X::NEAT, Y::NEAT; w₁ = length(X.rawX) / (length(X.rawX) 
     slope = γ₂ / γ₁; intercept = μsy + σsy/σyv*(μxv-μyv) - slope * μsx
     lYx = @. X.tabX.scale * slope + intercept
     tbl = DataFrame(scaleX = X.tabX.scale, lYx = lYx)
-    return ResultBraunHolland(tbl, X.marginal, Y.marginal, (slope = slope, intercept = intercept))
+    return ResultBraunHolland(tbl, 
+                              DataFrame(Group = [1, 2], μ = [μsx, μsy], σ = [σsx, σsy], γ = [γ₁, γ₂], w = [w₁, w₂]),
+                              (slope = slope, intercept = intercept))
 end
 
 # Nonequivalent Groups : Chained Equipercentile Method
@@ -218,15 +219,24 @@ struct ResultChainedEquipercentile <: NEATEquateMethod
 end
 """
     ChainedEquipercentile(X::NEAT, Y::NEAT; case = :middle)
+
+# Algorithm
+Chained equipercentile equating is, in short, to conduct equipercentile equating consecutively.
+First, find equipercentile relationship for score X to scores V on the first population.
+This function is referred to as 𝑒V1(𝑥).
+Second, fubd the equipercentile relationship for converting scores on the common items(V) to scores on the form Y based on examinees from the population 2.
+Refer to the resulting function as 𝑒Y2(𝑣).
 """
 function ChainedEquipercentile(X::NEAT, Y::NEAT; case = :middle)
-    #
-    ftX = freqtab(X.rawX); ftXV = freqtab(X.rawV)
+    # Find equipercentile relationship for score V on the first population
+    ftX = freqtab(X.rawX; interval = X.intervalX, scale = X.tabX.scale)
+    ftXV = freqtab(X.rawV; interval = X.intervalV, scale = X.tabV.scale)
     eV₁ = Equipercentile(ftX, ftXV)
-    eY₂ = Equipercentile(freqtab(Y.rawV), freqtab(Y.rawX))
+    eY₂ = Equipercentile(freqtab(Y.rawV; interval = Y.intervalV, scale = Y.tabV.scale), freqtab(Y.rawX; interval = Y.intervalX, scale = Y.tabX.scale))
     # Search percentile of score V on scale Y
-    eYxu = zeros(Float64, length(eY₂.table.scaleX)); eYxl = zeros(Float64, length(eY₂.table.scaleX))
-    for (i,v) in enumerate(eY₂.table.eYx)
+    eYxu = zeros(Float64, length(eV₁.table.scaleX))
+    eYxl = zeros(Float64, length(eV₁.table.scaleX))
+    for (i,v) in enumerate(eV₁.table.eYx)
         P = PRF(v, ftXV)
         eYxu[i] = PFu(P, ftX)
         eYxl[i] = PFl(P, ftX)
@@ -240,7 +250,7 @@ function ChainedEquipercentile(X::NEAT, Y::NEAT; case = :middle)
     elseif case == :middle
         eYx = (eYxu .+ eYxl) ./ 2.0
     end
-    tbl = DataFrame(scaleY = eY₂.table.scaleX, eYx = eYx)
+    tbl = DataFrame(scaleX = eV₁.table.scaleX, eYx = eYx)
     return ResultChainedEquipercentile(tbl)
 end
 #-----------------
