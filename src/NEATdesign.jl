@@ -218,15 +218,24 @@ struct ResultChainedEquipercentile <: NEATEquateMethod
 end
 """
     ChainedEquipercentile(X::NEAT, Y::NEAT; case = :middle)
+
+# Algorithm
+Chained equipercentile equating is, in short, to conduct equipercentile equating consecutively.
+First, find equipercentile relationship for score X to scores V on the first population.
+This function is referred to as 𝑒V1(𝑥).
+Second, fubd the equipercentile relationship for converting scores on the common items(V) to scores on the form Y based on examinees from the population 2.
+Refer to the resulting function as 𝑒Y2(𝑣).
 """
 function ChainedEquipercentile(X::NEAT, Y::NEAT; case = :middle)
-    #
-    ftX = freqtab(X.rawX); ftXV = freqtab(X.rawV)
+    # Find equipercentile relationship for score V on the first population
+    ftX = freqtab(X.rawX)
+    ftXV = freqtab(X.rawV)
     eV₁ = Equipercentile(ftX, ftXV)
     eY₂ = Equipercentile(freqtab(Y.rawV), freqtab(Y.rawX))
     # Search percentile of score V on scale Y
-    eYxu = zeros(Float64, length(eY₂.table.scaleX)); eYxl = zeros(Float64, length(eY₂.table.scaleX))
-    for (i,v) in enumerate(eY₂.table.eYx)
+    eYxu = zeros(Float64, length(eV₁.table.scaleX))
+    eYxl = zeros(Float64, length(eV₁.table.scaleX))
+    for (i,v) in enumerate(eV₁.table.eYx)
         P = PRF(v, ftXV)
         eYxu[i] = PFu(P, ftX)
         eYxl[i] = PFl(P, ftX)
@@ -240,7 +249,7 @@ function ChainedEquipercentile(X::NEAT, Y::NEAT; case = :middle)
     elseif case == :middle
         eYx = (eYxu .+ eYxl) ./ 2.0
     end
-    tbl = DataFrame(scaleY = eY₂.table.scaleX, eYx = eYx)
+    tbl = DataFrame(scaleY = eV₁.table.scaleX, eYx = eYx)
     return ResultChainedEquipercentile(tbl)
 end
 #-----------------
