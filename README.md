@@ -55,7 +55,7 @@ tmp = Template(;
     user = "takuizum",
     license = "MIT",
     authors = "Takumi Shibuya",
-    dir = "C:\\Users\\bc0089985\\Documents\\GitHub\\",
+    dir = "YOURDIR",
     julia_version = v"1.3.0",
     ssh = false,
     plugins=[
@@ -71,6 +71,11 @@ generate("Equate",tmp)
 
 
 # Version Update History
+
+### 0.1.5
+
+- Fix plot recipes
+- Presmoothing for NEAT design can be more accessible.
 
 ### 0.1.4
 
