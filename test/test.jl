@@ -87,6 +87,27 @@ plot!(resBH.table.scaleX, resBH.table.lYx; label = "Braun Holland", xlabel = "sc
 resCE = ChainedEquipercentile(freqtab(KBneatX.total, KBneatX.anchor), freqtab(KBneatY.total, KBneatY.anchor))
 plot!(resCE.table.eYx, resCE.table.scaleY; label = "Chained Equipercentile", xlabel = "scale X", ylabel = "scale Y", legend = :topleft)
 
+# debug
+X = freqtab(KBneatX.total, KBneatX.anchor)
+Y = freqtab(KBneatY.total, KBneatY.anchor)
+
+ftX = freqtab(X.rawX)
+ftXV = freqtab(X.rawV)
+eV₁ = Equipercentile(ftX, ftXV)
+eY₂ = Equipercentile(freqtab(Y.rawV), freqtab(Y.rawX))
+# Search percentile of score V on scale Y
+eYxu = zeros(Float64, length(eV₁.table.scaleX))
+eYxl = zeros(Float64, length(eV₁.table.scaleX))
+for (i,v) in enumerate(eV₁.table.eYx)
+    P = (v, ftXV)
+    eYxu[i] = PFu(P, ftX)
+    eYxl[i] = PFl(P, ftX)
+end
+eYx = eYxu
+tbl = DataFrame(scaleY = eV₁.table.scaleX, eYx = eYx)
+return ResultChainedEquipercentile(tbl)
+# dev end
+
 # smoothed NEAT
 # @profview 
 ft1 = presmoothing(ftX, LogLinearFormula(6), LogLinearFormula(6))
