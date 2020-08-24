@@ -40,6 +40,38 @@ function presmoothing(F::EG, fml)
                     prob = freq ./ sum(freq), cumprob = cumsum(freq) ./ sum(freq))
     return SmoothedFreqTab(tab, F.raw, F.interval, fit1)
 end
+
+struct SmoothedNEATFreqTab <: NEAT
+    tabX
+    tabV
+    intervalX
+    intervalV
+    fitX
+    fitV
+    marginal
+end
+"""
+    presmoothing(F::NEAT, LogLinearFormula(df::Int64), LogLinearFormula(df::Int64))
+
+Returns presmoothed frequency table as `SmoothedNEATFreqTab` and `glm` fitted object, 
+but `interval` and `marginal` elements, which are returned, are not based on smoothed score.
+
+Preserving first C moments of original frequency data, passed `LogLinearFormula(C)` to `fml`.
+C is a degree of freedom
+"""
+function presmoothing(F::NEAT, fmlX, fmlV)
+    # Smoothing X (independent part)
+    fitX = glm(fmlX, F.tabX, Poisson(), LogLink())
+    freqX = predict(fitX, DataFrame(scale = F.tabX.scale))
+    tabX = DataFrame(scale = F.tabX.scale, freq = freqX, cumfreq = cumsum(freqX),
+                    prob = freqX ./ sum(freqX), cumprob = cumsum(freqX) ./ sum(freqX))
+    # Smoothing V (common part)
+    fitV = glm(fmlV, F.tabV, Poisson(), LogLink())
+    freqV = predict(fitV, DataFrame(scale = F.tabV.scale))
+    tabV = DataFrame(scale = F.tabV.scale, freq = freqV, cumfreq = cumsum(freqV),
+                    prob = freqV ./ sum(freqV), cumprob = cumsum(freqV) ./ sum(freqV))
+    return SmoothedNEATFreqTab(tabX, tabV, F.intervalX, F.intervalV, fitX, fitV, F.marginal)
+end
 # Kernel method
 function RjX(x, xⱼ, a, μ, hX)
     return (x - a * xⱼ - (1-a)*μ) / (a*hX)
