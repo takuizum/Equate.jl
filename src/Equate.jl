@@ -9,6 +9,7 @@ using GLM: glm, predict, @formula, LogLink, coef
 using StatsModels: TableRegressionModel
 # import RecipesBase: @recipe, plot
 using RecipesBase
+import Plots: cgrad
 import StatsBase: coef
 
 export
