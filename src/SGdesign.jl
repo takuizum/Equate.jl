@@ -42,7 +42,7 @@ function PFl(P, F::EG)
     if P ≤ 0.0 return -.5 end
     xl = P > 50.0 ? p_search_descend(P, F, 0) : p_search_ascend(P, F, -1)
     x = (P/100 - CDF(xl, F)) / (CDF(xl+F.interval, F) - CDF(xl, F))
-    return isinf(x) ? xl + F.interval/2.0 : x + xl + F.interval/2.0
+    return isinf(x) || isnan(x) ? xl + F.interval/2.0 : x + xl + F.interval/2.0
 end
 # equipercentile equating
 struct ResultEquipercentile <: SGEquateMethod
@@ -64,7 +64,8 @@ The second one is equated score from test Y, which is equipercentile score on th
 """
 function Equipercentile(X::EG, Y::EG; case = :middle)
     scaleX = X.tab.scale
-    eYxu = zeros(Float64, length(scaleX)); eYxl = zeros(Float64, length(scaleX))
+    eYxu = zeros(Float64, length(scaleX))
+    eYxl = zeros(Float64, length(scaleX))
     for (i,v) in enumerate(scaleX)
         P = PRF(v, X)
         eYxu[i] = PFu(P, Y)
