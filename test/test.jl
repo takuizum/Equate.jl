@@ -3,7 +3,8 @@ using CSVFiles, DataFrames
 ACTmath = DataFrame!(load("data/ACTmath.csv"))
 X = fill.(ACTmath.scale, ACTmath.xcount) |> Iterators.flatten |> collect
 Y = fill.(ACTmath.scale, ACTmath.ycount) |> Iterators.flatten |> collect
-ftX = freqtab(X); ftY = freqtab(Y);
+ftX = freqtab(X)
+ftY = freqtab(Y)
 Equipercentile(ftX, ftY; case = :upper) |> print
 Equipercentile(ftX, ftY; case = :lower) |> print
 Equipercentile(ftX, ftY; case = :both) |> print
@@ -13,6 +14,29 @@ ansEp = [0.3742266165402808, 2.8668002442948866, 4.377679952675711, 5.5898999019
 all(resEp.table.eYx .≈ ansEp)
 # Linear Equating
 Linear(ftX, ftY).table.lYx |> print
+
+# Run equating under the SG design
+using CSVFiles, DataFrames, RCall
+@rimport equate as requate
+ACTmath = DataFrame!(load("data/ACTmath.csv"))
+X = fill.(ACTmath.scale, ACTmath.xcount) |> Iterators.flatten |> collect
+Y = fill.(ACTmath.scale, ACTmath.ycount) |> Iterators.flatten |> collect
+ftX = freqtab(X)
+ftY = freqtab(Y)
+rftX = requate.freqtab(X)
+rftY = requate.freqtab(Y)
+
+# equipercentile
+Equipercentile(ftX, ftY; case = :middle)
+resEr = requate.equate(rftX, rftY, type = "e")
+@rput resEr
+R"resEr$concordance"
+
+# linear
+Linear(ftX, ftY)
+resLr = requate.equate(rftX, rftY, type = "l")
+
+
 
 # Log Linear Smoothing
 using CSVFiles, DataFrames, GLM
@@ -65,48 +89,46 @@ ftY = freqtab(KBneatY.total, KBneatY.anchor)
 sum(ftX.marginal)
 heatmap(ftX.marginal, color = :plasma)
 
-#Tucker
+# Run equiting functions under the NEAT design and results comparison.
+using RCall
+@rimport equate as requate
+
+rftX = requate.freqtab(DataFrame(total = KBneatX.total, anchor = KBneatX.anchor))
+rftY = requate.freqtab(DataFrame(total = KBneatY.total, anchor = KBneatY.anchor))
+#Tucker # Matched
 resTk = Tucker(ftX, ftY)
+resTkr = requate.equate(rftX, rftY, type = "l", method = "tucker")
 plot(resTk.table.scaleX, resTk.table.lYx; label = "Tucker", xlabel = "scale X", ylabel = "scale Y")
 
-# Chained Linear
+# Levine # common = :internal is matched
+resLv = LevineCongeneric(ftX, ftY; common = :internal)
+resTkr = requate.equate(rftX, rftY, type = "l", method = "levine")
+
+# Chained Linear # Matched
 ObservableStats(ftY)
 resCL = ChainedLinear(ftX, ftY)
+resCLr = requate.equate(rftX, rftY, type = "l", method = "chained")
 plot!(resCL.table.scaleX, resCL.table.lYx; label = "Chained Linear", xlabel = "scale X", ylabel = "scale Y")
+
+# Braun & Holland # Not matched
+resBH = BraunHolland(ftX, ftY)
+resBHr = requate.equate(rftX, rftY, type = "l", method = "braun/holland")
+plot!(resBH.table.scaleX, resBH.table.lYx; label = "Braun Holland", xlabel = "scale X", ylabel = "scale Y")
 
 # Frequency estimation
 ftm = ftX.marginal
 resFE = FrequencyEstimation(ftX, ftY)
+resFEr = requate.equate(rftX, rftY, type = "e", method = "frequency estimation")
+@rput resFEr
+R"resFEr$concordance"
 plot!(resFE.table.eYx, resFE.table.scaleY; label = "Frequency Estimation", xlabel = "scale X", ylabel = "scale Y")
 
-# Braun & Holland
-resBH = BraunHolland(ftX, ftY)
-plot!(resBH.table.scaleX, resBH.table.lYx; label = "Braun Holland", xlabel = "scale X", ylabel = "scale Y")
-
 # Chained Equipercentile
-resCE = ChainedEquipercentile(freqtab(KBneatX.total, KBneatX.anchor), freqtab(KBneatY.total, KBneatY.anchor))
-plot!(resCE.table.eYx, resCE.table.scaleY; label = "Chained Equipercentile", xlabel = "scale X", ylabel = "scale Y", legend = :topleft)
-
-# debug
-X = freqtab(KBneatX.total, KBneatX.anchor)
-Y = freqtab(KBneatY.total, KBneatY.anchor)
-
-ftX = freqtab(X.rawX)
-ftXV = freqtab(X.rawV)
-eV₁ = Equipercentile(ftX, ftXV)
-eY₂ = Equipercentile(freqtab(Y.rawV), freqtab(Y.rawX))
-# Search percentile of score V on scale Y
-eYxu = zeros(Float64, length(eV₁.table.scaleX))
-eYxl = zeros(Float64, length(eV₁.table.scaleX))
-for (i,v) in enumerate(eV₁.table.eYx)
-    P = (v, ftXV)
-    eYxu[i] = PFu(P, ftX)
-    eYxl[i] = PFl(P, ftX)
-end
-eYx = eYxu
-tbl = DataFrame(scaleY = eV₁.table.scaleX, eYx = eYx)
-return ResultChainedEquipercentile(tbl)
-# dev end
+resCE = ChainedEquipercentile(ftX, ftY; case = :upper)
+resCEr = requate.equate(rftX, rftY, type = "e", method = "chained")
+@rput resCEr
+R"resCEr$concordance"
+plot!(resCE.table.eYx, resCE.table.scaleX; label = "Chained Equipercentile", xlabel = "scale X", ylabel = "scale Y", legend = :topleft)
 
 # smoothed NEAT
 # @profview 
@@ -149,3 +171,8 @@ plot(KftX)
 smftX = presmoothing(ftX, LogLinearFormula(6))
 plot(smftX)
 plot(smftX, smfit)
+
+plot(ftX)
+
+# Presmooth model comparison
+ftX = freqtab(KBneatX.total)

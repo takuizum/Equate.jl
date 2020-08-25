@@ -227,19 +227,20 @@ This function is referred to as 𝑒V1(𝑥).
 Second, fubd the equipercentile relationship for converting scores on the common items(V) to scores on the form Y based on examinees from the population 2.
 Refer to the resulting function as 𝑒Y2(𝑣).
 """
-function ChainedEquipercentile(X::NEAT, Y::NEAT; case = :middle)
+function ChainedEquipercentile(X::NEAT, Y::NEAT; case = :lower)
     # Find equipercentile relationship for score V on the first population
     ftX = freqtab(X.rawX; interval = X.intervalX, scale = X.tabX.scale)
     ftXV = freqtab(X.rawV; interval = X.intervalV, scale = X.tabV.scale)
-    eV₁ = Equipercentile(ftX, ftXV)
-    eY₂ = Equipercentile(freqtab(Y.rawV; interval = Y.intervalV, scale = Y.tabV.scale), freqtab(Y.rawX; interval = Y.intervalX, scale = Y.tabX.scale))
+    ftYV = freqtab(Y.rawV; interval = Y.intervalV, scale = Y.tabV.scale)
+    ftY = freqtab(Y.rawX; interval = Y.intervalX, scale = Y.tabX.scale)
+    eV₁x = Equipercentile(ftX, ftXV)
     # Search percentile of score V on scale Y
-    eYxu = zeros(Float64, length(eV₁.table.scaleX))
-    eYxl = zeros(Float64, length(eV₁.table.scaleX))
-    for (i,v) in enumerate(eV₁.table.eYx)
-        P = PRF(v, ftXV)
-        eYxu[i] = PFu(P, ftX)
-        eYxl[i] = PFl(P, ftX)
+    eYxu = zeros(Float64, length(eV₁x.table.scaleX))
+    eYxl = zeros(Float64, length(eV₁x.table.scaleX))
+    for (i,v) in enumerate(eV₁x.table.eYx)
+        P = PRF(v, ftYV)
+        eYxu[i] = PFu(P, ftY)
+        eYxl[i] = PFl(P, ftY)
     end
     if case == :upper
         eYx = eYxu
@@ -250,7 +251,7 @@ function ChainedEquipercentile(X::NEAT, Y::NEAT; case = :middle)
     elseif case == :middle
         eYx = (eYxu .+ eYxl) ./ 2.0
     end
-    tbl = DataFrame(scaleX = eV₁.table.scaleX, eYx = eYx)
+    tbl = DataFrame(scaleX = eV₁x.table.scaleX, eYx = eYx)
     return ResultChainedEquipercentile(tbl)
 end
 #-----------------

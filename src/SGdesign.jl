@@ -58,11 +58,13 @@ The second one is equated score from test Y, which is equipercentile score on th
 `case` represents which equating case use. Pass to the symbols below.
 
 - `:upper` Calculating scores correspond to arbitrary percentile P, use the smallest integer score with a cumulative percent that is greater than P.
-- `:lower` Contrary to above case, use the largest integer score with a cumulative percent that is less than P
+- `:lower` (default) Contrary to above case, use the largest integer score with a cumulative percent that is less than P
 - `:both` (Not for practice) Show both case of upper and lower.
-- `:middle` (default) Use midpoint case upper between lower.
+- `:middle` Use midpoint case upper between lower.
+
+In my example cases, it seems that equate package in R uses `lower` case to equate.
 """
-function Equipercentile(X::EG, Y::EG; case = :middle)
+function Equipercentile(X::EG, Y::EG; case = :lower)
     scaleX = X.tab.scale
     eYxu = zeros(Float64, length(scaleX))
     eYxl = zeros(Float64, length(scaleX))
