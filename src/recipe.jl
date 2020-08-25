@@ -17,7 +17,7 @@ end
 @recipe function f(x::SGFreqTab)
     label --> "Marginal Histogram under the SG design"
     seriestype := :heatmap
-    color --> cgrad([:white, :gray, :black])
+    seriescolor --> cgrad([:white, :gray, :black])
     x.marginal
 end
 
