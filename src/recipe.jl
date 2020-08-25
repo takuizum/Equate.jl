@@ -1,10 +1,20 @@
-@recipe function f(x::SmoothedFreqTab, fit::TableRegressionModel)
-    label --> "Smoothed degree = $(length(coef(fit))-1)"
-    x.tab.scale, predict(fit)
+# Check score distributions
+@recipe function f(x::FreqTab)
+    seriestype := :line
+    linecolor --> :gray
+    @series begin
+        label --> ""
+        seriestype := :scatter
+        markershape --> :x
+        markercolor --> :black
+        x.tab.scale, x.tab.freq
+    end
+    label --> "Empirical probability"
+    x.tab.scale, x.tab.freq
 end
 
 @recipe function f(x::SmoothedFreqTab)
-    label --> "Smoothed observed probability"
+    label --> "Smoothed degree = $(length(coef(x.fit))-1)"
     x.tab.scale, x.tab.freq
 end
 
@@ -17,10 +27,46 @@ end
 @recipe function f(x::SGFreqTab)
     label --> "Marginal Histogram under the SG design"
     seriestype := :heatmap
-    color --> cgrad([:white, :gray, :black])
+    seriescolor --> cgrad([:white, :gray, :black])
     x.marginal
 end
 
+# @recipe function f(x::SGFreqTab)
+#     # layout
+#     layout --> @layout [
+#         tophist           _
+#         scatter{0.5w,0.5h} righthist
+#     ]
+#     link := :y
+#     framestyle := [:none :axes :axes]
+#     legend --> false
+#     # scatter plot
+#     @series begin
+#         seriestype := :scatter
+#         markeralpha --> 0.4
+#         markershape --> :+
+#         markercolor --> :black
+#         subplot := 2
+#         x.rawX, x.rawV
+#     end
+#     # Hist : xaxis
+#     @series begin
+#         seriestype := :line
+#         seriescolor := :black
+#         subplot := 1
+#         x.tabX.scale, x.tabX.freq
+#     end
+#     # Hist : yaxis
+#     @series begin
+#         seriestype := :line
+#         seriescolor := :black
+#         orientation := :h
+#         subplot := 3
+#         x.tabV.scale, x.tabV.freq
+#     end
+# end
+
+# Show result of equating
 @recipe function f(x::ResultLinear)
     label --> "Linear"
     xguide --> "Test X"

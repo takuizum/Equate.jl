@@ -60,7 +60,7 @@ The second one is equated score from test Y, which is equipercentile score on th
 - `:upper` Calculating scores correspond to arbitrary percentile P, use the smallest integer score with a cumulative percent that is greater than P.
 - `:lower` Contrary to above case, use the largest integer score with a cumulative percent that is less than P
 - `:both` (Not for practice) Show both case of upper and lower.
-- `:middle` (default) Use midpoint case upper between lower.
+- `:middle` (default) Use midpoint case between upper and lower.
 """
 function Equipercentile(X::EG, Y::EG; case = :middle)
     scaleX = X.tab.scale

@@ -2,14 +2,14 @@ module Equate
 # =======
 
 using DataFrames
-using Statistics: mean, std, cov, cor, var
-using Distributions: Poisson, Normal, pdf, cdf
-using Optim: optimize, BFGS
-using GLM: glm, predict, @formula, LogLink, coef
-using StatsModels: TableRegressionModel
+import Statistics: mean, std, cov, cor, var
+import Distributions: Poisson, Normal, pdf, cdf
+import Optim: optimize, BFGS
+import GLM: glm, predict, @formula, LogLink, coef
+import StatsModels: TableRegressionModel
 # import RecipesBase: @recipe, plot
 using RecipesBase
-import Plots: cgrad
+import Plots: cgrad, @layout
 import StatsBase: coef
 
 export
