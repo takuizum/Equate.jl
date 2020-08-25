@@ -6,6 +6,19 @@ function ObservableStats(F::NEAT)
     covxv = cov(x, v); corxv = cor(x, v)
     return μx, σx, μv, σv, covxv, corxv
 end
+
+function SummaryStats(F::NEAT)
+    r(x) = round2(x; digits = 2)
+    x = F.rawX; v = F.rawV
+    μx = mean(x); σx = std(x); kx = kurtosis(x); sx = skewness(x); 
+    μv = mean(v); σv = std(v); kv = kurtosis(v); sv = skewness(v);
+    df = DataFrame(
+        test = ["X", "V"], mean = [μx, μv], sigma = [σx, σv], kurtosis = [kx, kv], skewness = [sx, sv],
+        min = [minimum(x), minimum(v)], max = [maximum(x), maximum(v)], N = [length(x), length(v)]
+    )
+    println(df)
+    return df;
+end
 struct ResultTucker <: NEATEquateMethod
     table::DataFrame
     synthetic::DataFrame
