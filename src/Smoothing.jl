@@ -4,12 +4,26 @@
     LogLinearFormula(df::Int64)
 
 Returns GLM formula can be used in `glm` with `FreqTab` data frame.
-
 `df`, is abbreviation for degrees of formula, represents degree of polynomial log-linear method.
+This function works very slowly. If a fixed degree formula will be used repeatedly, define the formula as a variable.
+The similer macro `@LogLinearFormula` is provided and it is faster than the function.
 """
-function LogLinearFormula(df::Int64)
+function LogLinearFormula(df)
     fml = "@formula(freq ~ 1 +"
-    for d in 1:df
+    @simd for d in 1:df
+        fml *= "scale^$d"
+        if d != df
+            fml *= " + "
+        else
+            fml *= ")"
+        end
+    end
+    return eval(Meta.parse(fml))
+end
+
+macro LogLinearFormula(df)
+    fml = "@formula(freq ~ 1 +"
+    @simd for d in 1:df
         fml *= "scale^$d"
         if d != df
             fml *= " + "
@@ -26,7 +40,7 @@ struct SmoothedFreqTab <: EG
     fit
 end
 """
-    presmoothing(F::FreqTab, LogLinearFormula(df::Int64))
+    presmoothing(F::FreqTab, @LogLinearFormula(df::Int64))
 
 Returns presmoothed frequency table as `SmoothedFreqTab` and `glm` fitted object.
 
@@ -40,6 +54,21 @@ function presmoothing(F::EG, fml)
                     prob = freq ./ sum(freq), cumprob = cumsum(freq) ./ sum(freq))
     return SmoothedFreqTab(tab, F.raw, F.interval, fit1)
 end
+
+# function presmoothing(F::EG, degree::Int64)
+#     AIC, BIC, AICC, DEVIANCE, LL = zeros.(Float64, fill(degree, 5))
+#     for d in 1:degree
+#         println("Fitting dof = $degree model.")
+#         fml = LogLinearFormula(d)
+#         fit = glm(fml, F.tab, Poisson(), LogLink())
+#         AIC[d] = aic(fit)
+#         BIC[d] = bic(fit)
+#         AICC[d] = aicc(fit)
+#         LL[d] = loglikelihood(fit)
+#         DEVIANCE[d] = deviance(fit)
+#     end
+#     DataFrame(degree = [1:1:degree;], aic = AIC, aicc = IACC, bic = BIC, loglik = LL, deviance = DEVIANCE)
+# end
 
 struct SmoothedNEATFreqTab <: NEAT
     tabX
@@ -74,6 +103,8 @@ function presmoothing(F::NEAT, fmlX, fmlV)
                     prob = freqV ./ sum(freqV), cumprob = cumsum(freqV) ./ sum(freqV))
     return SmoothedNEATFreqTab(tabX, tabV, F.rawX, F.rawV, F.intervalX, F.intervalV, fitX, fitV, F.marginal)
 end
+
+
 # Kernel method
 function RjX(x, xⱼ, a, μ, hX)
     return (x - a * xⱼ - (1-a)*μ) / (a*hX)
