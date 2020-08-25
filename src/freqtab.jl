@@ -21,7 +21,7 @@ function freqtab(X; interval = 1.0, scale = minimum(X):interval:maximum(X))
     cumfreq = cumsum(freq)
     cumprob = cumsum(freq) ./ sum(freq)
     res = DataFrame(scale = scale, freq = freq, cumfreq = cumfreq, prob = freq ./ sum(freq), cumprob = cumprob)
-    return FreqTab(res, X, interval)
+    return FreqTab(res, X[X !== missing], interval)
 end
 
 # equivalent group design
