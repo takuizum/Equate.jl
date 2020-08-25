@@ -3,11 +3,12 @@ module Equate
 
 using DataFrames
 using Statistics: mean, std, cov, cor, var
+using StatsBase: kurtosis, skewness #, aic, aicc, bic, loglikelihood, deviance
 using Distributions: Poisson, Normal, pdf, cdf
 using Optim: optimize, BFGS
 using GLM: glm, predict, @formula, LogLink, coef
 using StatsModels: TableRegressionModel
-# import RecipesBase: @recipe, plot
+import RecipesBase: @recipe
 using RecipesBase
 import Plots: cgrad
 import StatsBase: coef
@@ -33,6 +34,7 @@ export
     # Utility functions
     coef,
     ExpandTable,
+    SummaryStats, 
 
     # Support functions
     round2,
@@ -41,6 +43,7 @@ export
     PFu,
     PFl,
     LogLinearFormula,
+    @LogLinearFormula,
     ObservableStats,
     BandwidthPenalty,
     EstBandwidth,
