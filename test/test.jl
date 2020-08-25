@@ -71,9 +71,25 @@ using CSVFiles, DataFrames
 ACTmath = DataFrame!(load("data/ACTmath.csv"))
 X = ExpandTable(ACTmath.scale, ACTmath.xcount)
 Y = ExpandTable(ACTmath.scale, ACTmath.ycount)
-ftX = presmoothing(freqtab(X), LogLinearFormula(4))
-ftY = presmoothing(freqtab(Y), LogLinearFormula(4))
+ftX = freqtab(X)
+ftY = freqtab(Y)
+smX = presmoothing(ftX, LogLinearFormula(4));
+@time fml = @LogLinearFormula(4);
+@time smY = presmoothing(ftY, @LogLinearFormula(4));
+@time smY = presmoothing(ftY, fml);
 Equipercentile(ftX, ftY)
+
+presmoothing(ftY, 6)
+
+using GLM
+deviance(smY.fit)
+dof_residual(smY.fit)
+using StatsBase
+aic(smY.fit)
+bic(smY.fit)
+aicc(smY.fit)
+loglikelihood(smY.fit)
+deviance(smY.fit)
 
 ftX = KernelSmoothing(freqtab(X))
 ftY = KernelSmoothing(freqtab(Y))
@@ -173,6 +189,16 @@ plot(smftX)
 plot(smftX, smfit)
 
 plot(ftX)
+
+# Summary Stats
+using CSVFiles, DataFrames
+KBneatX = DataFrame!(load("data/KBneatX.csv"))
+KBneatY = DataFrame!(load("data/KBneatY.csv"))
+
+ftX = freqtab(KBneatX.total, KBneatX.anchor)
+ftY = freqtab(KBneatY.total, KBneatY.anchor)
+
+test = SummaryStats(ftX);
 
 # Presmooth model comparison
 ftX = freqtab(KBneatX.total)
