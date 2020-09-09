@@ -1,7 +1,7 @@
 # Equipercentile Equating
 using CSVFiles, DataFrames
 ACTmath = DataFrame!(load("data/ACTmath.csv"))
-X = fill.(ACTmath.scale, ACTmath.xcount) |> Iterators.flatten |> collect
+X = fill.(ACTmath.scale, ACTmath.xcount) |> Iterators.flatten |> collect # is euqivalent ExpandTable(ACTmath.scale, ACTmath.xcount)
 Y = fill.(ACTmath.scale, ACTmath.ycount) |> Iterators.flatten |> collect
 ftX = freqtab(X)
 ftY = freqtab(Y)
@@ -13,7 +13,9 @@ Equipercentile(ftX, ftY; case = :middle).table.eYx |> print
 ansEp = [0.3742266165402808, 2.8668002442948866, 4.377679952675711, 5.589899901936712, 6.5719466795280965, 7.675963305503476, 8.779402720766932, 9.821396984022385, 10.832444129170566, 11.807020939106527, 12.762424501360979, 13.674737884179626, 14.606852126241565, 15.531810687908973, 16.384026327429506, 17.269396166667576, 18.13458065086816, 18.993135811329992, 19.859585529606615, 20.69055191799923, 21.57870500928172, 22.426825738450507, 23.24982055643067, 24.084693805207607, 24.971262459510967, 25.86435538130699, 26.775635117977668, 27.793162605037413, 28.849521797543677, 29.862255991592047, 30.864456663583688, 31.869824776800975, 32.91214157149059, 33.951819244636646, 34.89830208873431, 35.799993897278775, 36.82494259856727, 37.87655236332893, 38.90275680579959, 40.018418515159]
 all(resEp.table.eYx .≈ ansEp)
 # Linear Equating
-Linear(ftX, ftY).table.lYx |> print
+Linear(ftX, ftY)
+# Mean Equating
+Mean(ftX, ftY)
 
 # Run equating under the SG design
 using CSVFiles, DataFrames, RCall
@@ -27,16 +29,19 @@ rftX = requate.freqtab(X)
 rftY = requate.freqtab(Y)
 
 # equipercentile
-Equipercentile(ftX, ftY; case = :middle)
+resE = Equipercentile(ftX, ftY; case = :lower)
+resE.table
 resEr = requate.equate(rftX, rftY, type = "e")
-@rput resEr
-R"resEr$concordance"
-
+resEr["concordance"]
+resEr["concordance"][2] .- resE.table.eYx
 # linear
-Linear(ftX, ftY)
+resL = Linear(ftX, ftY)
 resLr = requate.equate(rftX, rftY, type = "l")
-
-
+resLr["concordance"][2] .- resL.table[:, r"Yx"][:, 1]
+# Mean
+resM = Mean(ftX, ftY)
+resMr = requate.equate(rftX, rftY, type = "m")
+resMr["concordance"][2] .- resM.table[:, r"Yx"][:, 1]\
 
 # Log Linear Smoothing
 using CSVFiles, DataFrames, GLM
@@ -108,7 +113,6 @@ heatmap(ftX.marginal, color = :plasma)
 # Run equiting functions under the NEAT design and results comparison.
 using RCall
 @rimport equate as requate
-
 rftX = requate.freqtab(DataFrame(total = KBneatX.total, anchor = KBneatX.anchor))
 rftY = requate.freqtab(DataFrame(total = KBneatY.total, anchor = KBneatY.anchor))
 #Tucker # Matched
@@ -133,17 +137,15 @@ plot!(resBH.table.scaleX, resBH.table.lYx; label = "Braun Holland", xlabel = "sc
 
 # Frequency estimation
 ftm = ftX.marginal
-resFE = FrequencyEstimation(ftX, ftY)
+resFE = FrequencyEstimation(ftX, ftY; case = :lower)
 resFEr = requate.equate(rftX, rftY, type = "e", method = "frequency estimation")
-@rput resFEr
-R"resFEr$concordance"
+resFEr["concordance"][2] .- resFE.table.eYx
 plot!(resFE.table.eYx, resFE.table.scaleY; label = "Frequency Estimation", xlabel = "scale X", ylabel = "scale Y")
 
 # Chained Equipercentile
 resCE = ChainedEquipercentile(ftX, ftY; case = :upper)
 resCEr = requate.equate(rftX, rftY, type = "e", method = "chained")
-@rput resCEr
-R"resCEr$concordance"
+resCEr["concordance"][2] - resCE.table.eYx
 plot!(resCE.table.eYx, resCE.table.scaleX; label = "Chained Equipercentile", xlabel = "scale X", ylabel = "scale Y", legend = :topleft)
 
 # smoothed NEAT
@@ -186,7 +188,7 @@ plot(KftX)
 
 smftX = presmoothing(ftX, LogLinearFormula(6))
 plot(smftX)
-plot(smftX, smfit)
+plot(smftX, smftX.fit)
 
 plot(ftX)
 

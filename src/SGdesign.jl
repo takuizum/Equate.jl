@@ -45,8 +45,10 @@ function PFl(P, F::EG)
     return isinf(x) || isnan(x) ? xl + F.interval/2.0 : x + xl + F.interval/2.0
 end
 # equipercentile equating
-struct ResultEquipercentile <: SGEquateMethod
-    table::DataFrame
+struct SGEquateResult
+    method
+    table
+    estimates
 end
 """
     Equipercentile(X::EG, Y::EG; case = :middle)
@@ -83,13 +85,13 @@ function Equipercentile(X::EG, Y::EG; case = :lower)
         eYx = (eYxu .+ eYxl) ./ 2.0
     end
     tbl = DataFrame(scaleX = scaleX, eYx = eYx)
-    return ResultEquipercentile(tbl)
+    return SGEquateResult(
+        :Equipercentile,
+        tbl, 
+        nothing
+    )
 end
 # linear equating
-struct ResultLinear <: SGEquateMethod
-    table::DataFrame
-    estimates::NamedTuple
-end
 """
     Linear(X::EG, Y::EG)
 
@@ -102,5 +104,29 @@ function Linear(X::EG, Y::EG)
     slope = σY/σX; intercept = μY - slope*μX
     lYx = @. X.tab.scale * slope + intercept
     tbl = DataFrame(scaleX = X.tab.scale, lYx = lYx)
-    ResultLinear(tbl, (slope = slope, intercept = intercept))
+    return SGEquateResult(
+        :Linear,
+        tbl, 
+        (slope = slope, intercept = intercept)
+    )
+end
+
+# mean equating
+"""
+    Mean(X::EG, Y::EG)
+
+Mean equating under the equivalent group desing.
+This method, equate to match only first moments = mean, is so simple to comprehend the equating result.
+"""
+function Mean(X::EG, Y::EG)
+    μX = mean(X.raw)
+    μY = mean(Y.raw)
+    slope = 1.0; intercept = μY - μX
+    lYx = @. X.tab.scale * slope + intercept
+    tbl = DataFrame(scaleX = X.tab.scale, lYx = lYx)
+    return SGEquateResult(
+        :Mean, 
+        tbl, 
+        (slope = slope, intercept = intercept)
+    )
 end

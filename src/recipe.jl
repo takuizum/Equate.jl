@@ -17,64 +17,15 @@ end
 @recipe function f(x::SGFreqTab)
     label --> "Marginal Histogram under the SG design"
     seriestype := :heatmap
-    seriescolor --> cgrad([:white, :gray, :black])
+    # seriescolor --> cgrad([:white, :gray, :black])
     x.marginal
 end
 
-@recipe function f(x::ResultLinear)
-    label --> "Linear"
+@recipe function f(x::NEATEquateResult)
+    label --> string(x.method)
     xguide --> "Test X"
     yguide --> "Test Y (scaled)"
     legend --> :topleft
-    x.table.lYx, x.table.scaleX
-end
-
-@recipe function f(x::ResultEquipercentile)
-    label --> "Equipercentile"
-    xguide --> "Test X"
-    yguide --> "Test Y (scaled)"
-    legend --> :topleft
-    x.table.eYx, x.table.scaleX
-end
-
-# NEAT design
-@recipe function f(x::ResultFrequencyEstimation)
-    label --> "Frequency Estimation"
-    xguide --> "Test X"
-    yguide --> "Test Y (scaled)"
-    legend --> :topleft
-    x.table.eYx, x.table.scaleX
-end
-
-@recipe function f(x::ResultChainedLinear)
-    label --> "Chained Linear"
-    xguide --> "Test X"
-    yguide --> "Test Y (scaled)"
-    legend --> :topleft
-    x.table.lYx, x.table.scaleX
-end
-
-@recipe function f(x::ResultTucker)
-    label --> "Tucker"
-    xguide --> "Test X"
-    yguide --> "Test Y (scaled)"
-    legend --> :topleft
-    x.table.lYx, x.table.scaleX
-end
-
-@recipe function f(x::ResultBraunHolland)
-    label --> "Braun & Holland"
-    xguide --> "Test X"
-    yguide --> "Test Y (scaled)"
-    legend --> :topleft
-    x.table.lYx, x.table.scaleX
-end
-
-@recipe function f(x::ResultChainedEquipercentile)
-    label --> "Chained Equipercentile"
-    xguide --> "Test X"
-    yguide --> "Test Y (scaled)"
-    legend --> :topleft
-    x.table.eYx, x.table.scaleX
+    x.table[!, r"Yx"][!, 1], x.table.scaleX
 end
 

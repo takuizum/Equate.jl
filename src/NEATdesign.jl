@@ -19,11 +19,14 @@ function SummaryStats(F::NEAT)
     println(df)
     return df;
 end
-struct ResultTucker <: NEATEquateMethod
-    table::DataFrame
-    synthetic::DataFrame
-    estimates::NamedTuple
+
+struct NEATEquateResult <: NEATEquateMethod
+    method
+    table
+    synthetic
+    estimates
 end
+
 """
     Tucker(X::NEAT, Y::NEAT; w₁ = length(X.rawX) / (length(X.rawX) + length(Y.rawX)), w₂ = 1.0 - w₁)
 
@@ -50,16 +53,14 @@ function Tucker(X::NEAT, Y::NEAT; w₁ = length(X.rawX) / (length(X.rawX) + leng
     slope = sqrt(σ²sY)/sqrt(σ²sX); intercept = μsY - slope*μsX
     lYx = @. X.tabX.scale * slope + intercept
     tbl = DataFrame(scaleX = X.tabX.scale, lYx = lYx)
-    return ResultTucker(tbl,
-                       DataFrame(Group = [1, 2], μ = [μsX, μsY], σ = [sqrt(σ²sX), sqrt(σ²sY)], γ = [γ₁, γ₂], w = [w₁, w₂]),
-                       (slope = slope, intercept = intercept));
+    return NEATEquateResult(
+        :Tucker,
+        tbl,
+        DataFrame(Group = [1, 2], μ = [μsX, μsY], σ = [sqrt(σ²sX), sqrt(σ²sY)], γ = [γ₁, γ₂], w = [w₁, w₂]),
+        (slope = slope, intercept = intercept)
+    )
 end
 # Nonequivalent Groups : Levine under a classical congeneric model
-struct ResultLevineCongeneric <: NEATEquateMethod
-    table::DataFrame
-    synthetic::DataFrame
-    estimates::NamedTuple
-end
 """
     LevineCongeneric(X::NEAT, Y::NEAT; common = :external, w₁ = length(X.rawX) / (length(X.rawX) + length(Y.rawX)), w₂ = 1.0 - w₁)
 
@@ -93,16 +94,14 @@ function LevineCongeneric(X::NEAT, Y::NEAT; common = :external, w₁ = length(X.
     slope = sqrt(σ²sY)/sqrt(σ²sX); intercept = μsY - slope*μsX
     lYx = @. X.tabX.scale * slope + intercept
     tbl = DataFrame(scaleX = X.tabX.scale, lYx = lYx)
-    return ResultLevineCongeneric(tbl,
-                                  DataFrame(Group = [1, 2], μ = [μsX, μsY], σ = [sqrt(σ²sX), sqrt(σ²sY)], γ = [γ₁, γ₂], w = [w₁, w₂]),
-                                  (slope = slope, intercept = intercept))
+    return NEATEquateResult(
+        :LevineCongeneric, 
+        tbl,
+        DataFrame(Group = [1, 2], μ = [μsX, μsY], σ = [sqrt(σ²sX), sqrt(σ²sY)], γ = [γ₁, γ₂], w = [w₁, w₂]),
+        (slope = slope, intercept = intercept)
+    )
 end
 # Nonequivalent Groups : Chained linear Observed Score Equating
-struct ResultChainedLinear <: NEATEquateMethod
-    table::DataFrame
-    synthetic::DataFrame
-    estimates::NamedTuple
-end
 """
     ChainedLinear(X::NEAT, Y::NEAT)
 
@@ -131,16 +130,14 @@ function ChainedLinear(X::NEAT, Y::NEAT)
     intercept = μy + γ₂ *(μxv - μyv) - slope * μx
     lYx = @. X.tabX.scale * slope + intercept
     tbl =  DataFrame(scaleX = X.tabX.scale, lYx = lYx)
-    ResultChainedLinear(tbl,
-                        DataFrame(Group = [1,2], γ = [γ₁, γ₂]),
-                        (slope = slope, intercept = intercept))
+    return NEATEquateResult(
+        :ChainedLinear, 
+        tbl,
+        DataFrame(Group = [1,2], γ = [γ₁, γ₂]),
+        (slope = slope, intercept = intercept)
+    )
 end
 # Nonequivalent Groups : Braun-Holland Linear Method
-struct ResultBraunHolland <: NEATEquateMethod
-    table::DataFrame
-    synthetic::DataFrame
-    estimates::NamedTuple
-end
 """
     BraunHolland(X::NEAT, Y::NEAT; w₁ = length(X.rawX) / (length(X.rawX) + length(Y.rawX)), w₂ = 1.0 - w₁)
 
@@ -182,24 +179,22 @@ function BraunHolland(X::NEAT, Y::NEAT; w₁ = length(X.rawX) / (length(X.rawX) 
     slope = σsy / σsx; intercept = μsy - slope * μsx
     lYx = @. X.tabX.scale * slope + intercept
     tbl = DataFrame(scaleX = X.tabX.scale, lYx = lYx)
-    return ResultBraunHolland(tbl, 
-                              DataFrame(Group = [1, 2], μ = [μsx, μsy], σ = [σsx, σsy], w = [w₁, w₂]),
-                              (slope = slope, intercept = intercept))
+    return NEATEquateResult(
+        :BraunHolland, 
+        tbl,
+        DataFrame(Group = [1, 2], μ = [μsx, μsy], σ = [σsx, σsy], w = [w₁, w₂]),
+        (slope = slope, intercept = intercept)
+    )
 end
 
 # Nonequivalent Goups : Frequency Estimation
-struct ResultFrequencyEstimation <: NEATEquateMethod
-    table::DataFrame
-    marginalX::Matrix
-    marginalY::Matrix
-end
 """
     FrequencyEstimation(X::NEAT, Y::NEAT; w₁ = length(X.rawX) / (length(X.rawX) + length(Y.rawX)), w₂ = 1.0 - w₁)
 
 Conduct frequency estimation equipercentile equating, which assumes, for both form, the conditional distribution of total score given each common part score is the same in both populations.
 
 """
-function FrequencyEstimation(X::NEAT, Y::NEAT; w₁ = length(X.rawX) / (length(X.rawX) + length(Y.rawX)), w₂ = 1.0 - w₁)
+function FrequencyEstimation(X::NEAT, Y::NEAT; w₁ = length(X.rawX) / (length(X.rawX) + length(Y.rawX)), w₂ = 1.0 - w₁, case = :middle)
     # synthetic weight
     W = w₁ + w₂
     w₁ = w₁ / W; w₂ = w₂ / W
@@ -223,14 +218,16 @@ function FrequencyEstimation(X::NEAT, Y::NEAT; w₁ = length(X.rawX) / (length(X
                   X.rawX, X.intervalX)
     ftY = FreqTab(DataFrame(scale = Y.tabX.scale, freq = fsy, cumprob = cumsum(fsy) ./ sum(fsy)),
                   Y.rawX, Y.intervalX)
-    tbl = Equipercentile(ftX, ftY)
-    return ResultFrequencyEstimation(tbl.table, X.marginal, Y.marginal)
+    tbl = Equipercentile(ftX, ftY; case = case)
+    return NEATEquateResult(
+        :FrequencyEstimation, 
+        tbl.table, 
+        DataFrame(Group = [1, 2], μ = [mean(fsx), mean(fsy)], σ = [std(fsx), std(fsy)], w = [w₁, w₂]),
+        nothing
+    )
 end
 
 # Nonequivalent Groups : Chained Equipercentile Method
-struct ResultChainedEquipercentile <: NEATEquateMethod
-    table::DataFrame
-end
 """
     ChainedEquipercentile(X::NEAT, Y::NEAT; case = :middle)
 
@@ -266,6 +263,11 @@ function ChainedEquipercentile(X::NEAT, Y::NEAT; case = :lower)
         eYx = (eYxu .+ eYxl) ./ 2.0
     end
     tbl = DataFrame(scaleX = eV₁x.table.scaleX, eYx = eYx)
-    return ResultChainedEquipercentile(tbl)
+    return NEATEquateResult(
+        :ChainedEquipercentile, 
+        tbl, 
+        nothing, 
+        nothing
+    )
 end
 #-----------------

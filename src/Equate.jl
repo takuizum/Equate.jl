@@ -8,9 +8,8 @@ using Distributions: Poisson, Normal, pdf, cdf
 using Optim: optimize, BFGS
 using GLM: glm, predict, @formula, LogLink, coef
 using StatsModels: TableRegressionModel
-import RecipesBase: @recipe
 using RecipesBase
-import Plots: cgrad
+# import Plots: cgrad
 import StatsBase: coef
 
 export
@@ -19,6 +18,7 @@ export
 
     # Equate functions
     Equipercentile,
+    Mean, 
     Linear,
     Tucker,
     LevineCongeneric,
@@ -49,14 +49,8 @@ export
     EstBandwidth,
 
     # struct
-    ResultEquipercentile,
-    ResultLinear,
-    ResultTucker,
-    ResultLevineCongeneric,
-    ResultChainedLinear,
-    ResultFrequencyEstimation,
-    ResultBraunHolland,
-    ResultChainedEquipercentile
+    NEATEquateResult, 
+    SGEquateResult
 
 abstract type EquateDesign end
 """
