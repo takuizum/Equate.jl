@@ -19,3 +19,5 @@ ExpandTable(sc, fq)
 function ExpandTable(scale, freq)
     fill.(scale, freq) |> Iterators.flatten |> collect
 end
+
+expandtable = ExpandTable

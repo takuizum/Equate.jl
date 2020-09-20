@@ -34,6 +34,7 @@ export
     # Utility functions
     coef,
     ExpandTable,
+    expandtable, 
     SummaryStats, 
 
     # Support functions
