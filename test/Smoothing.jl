@@ -1,4 +1,4 @@
-using StatsFuns
+using StatsBase
 
 @testset "presmoothing" begin
     # df = 1
