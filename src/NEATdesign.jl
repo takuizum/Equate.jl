@@ -137,6 +137,31 @@ function ChainedLinear(X::NEAT, Y::NEAT)
         (slope = slope, intercept = intercept)
     )
 end
+
+"""
+    ChainedMean(X::NEAT, Y::NEAT)
+Chained mean equating, which results are identical for Levine's observed score and true score (not implemented) when w₁ = 1.0 (there is no option for the population weights in the mean equating).
+"""
+function ChainedMean(X::NEAT, Y::NEAT)
+    # test score
+    x = X.rawX; xv = X.rawV
+    y = Y.rawX; yv = Y.rawV
+    # ObservableStats
+    μx, σx, μxv, σxv, covxv, corxv = ObservableStats(X)
+    μy, σy, μyv, σyv, covyv, coryv = ObservableStats(Y)
+    γ₂ = σy / σyv
+    # estimate
+    slope = 1.0
+    intercept = μy + γ₂ *(μxv - μyv) - slope * μx
+    lYx = @. X.tabX.scale * slope + intercept
+    tbl =  DataFrame(scaleX = X.tabX.scale, lYx = lYx)
+    return NEATEquateResult(
+        :ChainedMean, 
+        tbl,
+        DataFrame(Group = [1,2], γ = [γ₁, γ₂]),
+        (slope = slope, intercept = intercept)
+    )
+end
 # Nonequivalent Groups : Braun-Holland Linear Method
 """
     BraunHolland(X::NEAT, Y::NEAT; w₁ = length(X.rawX) / (length(X.rawX) + length(Y.rawX)), w₂ = 1.0 - w₁)
@@ -157,19 +182,31 @@ function BraunHolland(X::NEAT, Y::NEAT; w₁ = length(X.rawX) / (length(X.rawX) 
     J = length(X.tabV.freq)
     h₁ = X.tabV.prob
     h₂ = Y.tabV.prob
+    # Conditional distribution
+    conditionalX = X.marginal ./ sum(X.marginal)
+    conditionalY = Y.marginal ./ sum(Y.marginal)
+    for v in 1:length(X.tabV.scale)
+        conditionalX[:, v] ./= h₁[v]
+    end
+    for v in 1:length(Y.tabV.scale)
+        conditionalY[:, v] ./= h₂[v]
+    end
+    # Marginal out
     f₂x = zeros(Float64, length(X.tabX.freq))
     g₁y = zeros(Float64, length(Y.tabX.freq))
     for j in 1:length(X.tabX.scale)
-        f₂x[j] = X.marginal[j,:]' * h₂
+        f₂x[j] = conditionalX[j,:]'h₂
     end
-    f₂x = f₂x ./ sum(f₂x)
     for j in 1:length(Y.tabX.scale)
-        g₁y[j] = Y.marginal[j,:]' * h₁
+        g₁y[j] = conditionalY[j,:]'h₁
     end
-    g₁y = g₁y ./ sum(g₁y)
+    # normalize
+    f₂x = f₂x / sum(f₂x)
+    g₁y = g₁y / sum(g₁y)
     # synthetic population
     fsx = @. w₁ * X.tabX.prob + w₂ * f₂x; fsx = fsx ./ sum(fsx)
     fsy = @. w₁ * g₁y + w₂ * Y.tabX.prob; fsy = fsy ./ sum(fsy)
+    @show f₂x, g₁y
     # synthetic pupulation parameter
     μsx = fsx' * X.tabX.scale
     σsx = sqrt(fsx' * (X.tabX.scale .- μsx) .^2)
@@ -200,16 +237,29 @@ function FrequencyEstimation(X::NEAT, Y::NEAT; w₁ = length(X.rawX) / (length(X
     w₁ = w₁ / W; w₂ = w₂ / W
     # prior (the weights from common part)
     J = length(X.tabV.freq)
-    h₁ = X.tabV.freq / sum(X.tabV.freq)
-    h₂ = Y.tabV.freq / sum(Y.tabV.freq)
+    h₁ = X.tabV.prob
+    h₂ = Y.tabV.prob
+    # Conditional distribution
+    conditionalX = X.marginal ./ sum(X.marginal)
+    conditionalY = Y.marginal ./ sum(Y.marginal)
+    for v in 1:length(X.tabV.scale)
+        conditionalX[:, v] ./= h₁[v]
+    end
+    for v in 1:length(Y.tabV.scale)
+        conditionalY[:, v] ./= h₂[v]
+    end
+    # Marginal out
     f₂x = zeros(Float64, length(X.tabX.freq))
     g₁y = zeros(Float64, length(Y.tabX.freq))
     for j in 1:length(X.tabX.scale)
-        f₂x[j] = X.marginal[j,:]' * h₂
+        f₂x[j] = conditionalX[j,:]'h₂
     end
     for j in 1:length(Y.tabX.scale)
-        g₁y[j] = Y.marginal[j,:]' * h₁
+        g₁y[j] = conditionalY[j,:]'h₁
     end
+    # normalize
+    f₂x = f₂x / sum(f₂x)
+    g₁y = g₁y / sum(g₁y)
     # synthetic population
     fsx = @. w₁ * X.tabX.freq + w₂ * f₂x
     fsy = @. w₁ * g₁y + w₂ * Y.tabX.freq
