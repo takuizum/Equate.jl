@@ -18,7 +18,7 @@ end
 # Percentile Function
 function p_search_descend(P, F::EG, offset)
     x = nothing;iter = length(F.tab.scale)
-    while x == nothing
+    while x === nothing
         iter -= 1
         x =  100CDF(F.tab.scale[iter], F) > P ? nothing : F.tab.scale[iter+offset]
     end
@@ -26,7 +26,7 @@ function p_search_descend(P, F::EG, offset)
 end
 function p_search_ascend(P, F::EG, offset)
     x = nothing;iter = 0
-    while x == nothing
+    while x === nothing
         iter += 1
         x = 100CDF(F.tab.scale[iter], F) < P ? nothing : iter == 1 ? 0.0 : F.tab.scale[iter+offset]
     end
