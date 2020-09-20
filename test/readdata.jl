@@ -1,16 +1,17 @@
+using Test
 using Equate
 using CSV, Statistics, DataFrames
 
-dir = replace(pwd(), "test" => "")
-ACTmath = DataFrame!(CSV.File(joinpath(dir,  "data/ACTmath.csv")))
-KBneatX = DataFrame!(CSV.File(joinpath(dir, "data/KBneatX.csv")))
-KBneatY = DataFrame!(CSV.File(joinpath(dir, "data/KBneatY.csv")))
+ACTmath = DataFrame!(CSV.File("data/ACTmath.csv"))
+KBneatX = DataFrame!(CSV.File("data/KBneatX.csv"))
+KBneatY = DataFrame!(CSV.File("data/KBneatY.csv"))
 
 ACTmathX = ExpandTable(ACTmath.scale, ACTmath.xcount)
 ACTmathY = ExpandTable(ACTmath.scale, ACTmath.ycount)
 
 @testset "ExpandTable" begin
     @test ExpandTable([0, 1, 2], [2, 2, 2]) == [0, 0, 1, 1, 2, 2]
+    @test expandtable([0, 1, 2], [2, 2, 2]) == [0, 0, 1, 1, 2, 2]
 end
 
 @testset "DataMoments" begin

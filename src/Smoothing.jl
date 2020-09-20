@@ -21,18 +21,6 @@ function LogLinearFormula(df)
     return eval(Meta.parse(fml))
 end
 
-macro LogLinearFormula(df)
-    fml = "@formula(freq ~ 1 +"
-    @simd for d in 1:df
-        fml *= "scale^$d"
-        if d != df
-            fml *= " + "
-        else
-            fml *= ")"
-        end
-    end
-    return eval(Meta.parse(fml))
-end
 struct SmoothedFreqTab <: EG
     tab::DataFrame
     raw::Vector
@@ -185,7 +173,7 @@ Estimate optimal bandwidth `hX` in Gaussian kernel.
 
 # Value
 
-The log of optimized bandwidth.
+Optimize information.
 
 """
 function EstBandwidth(X::SmoothedFreqTab; kernel = :Gaussian, K = 1)
@@ -195,6 +183,6 @@ function EstBandwidth(X::SmoothedFreqTab; kernel = :Gaussian, K = 1)
     lpred = predict(X.fit, DataFrame(scale = lscore))
     rpred = predict(X.fit, DataFrame(scale = rscore))
     opt = optimize(hX -> BandwidthPenalty(hX, X, lpred, rpred, K; kernel = kernel), [0.5], method = BFGS())
-    println("Minimizer sould be transformed `exp()` before interpretation. Minimizer = $(exp(opt.minimizer[1]))")
+    println("Minimizer sould be transformed `exp()` before interpretation. \nMinimizer (after taking `exp()`) = $(exp(opt.minimizer[1]))\n\n")
     return opt
 end
