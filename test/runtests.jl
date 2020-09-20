@@ -9,6 +9,8 @@ using CSV
     include("SGdesign.jl")
     # NEAT design
     include("NEATdesign.jl")
+    # Smoothing
+    include("Smoothing.jl")
 end
 
 
