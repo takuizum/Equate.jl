@@ -1,6 +1,6 @@
 # Equate
 
-![Build Status](https://github.com/takuizum/Equate.jl/workflows/.github/workflows/ci.yml/badge.svg)
+![CI](https://github.com/takuizum/Equate.jl/workflows/CI/badge.svg)
 [![Codecov](https://codecov.io/gh/takuizum/Equate.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/takuizum/Equate.jl)
 [![Coveralls](https://coveralls.io/repos/github/takuizum/Equate.jl/badge.svg?branch=master)](https://coveralls.io/github/takuizum/Equate.jl?branch=master)
 
