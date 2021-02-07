@@ -1,6 +1,6 @@
 # Equate
 
-[![Build Status](https://travis-ci.com/takuizum/Equate.jl.svg?branch=master)](https://travis-ci.com/takuizum/Equate.jl)
+![Build Status](https://github.com/takuizum/Equate.jl/workflows/.github/workflows/ci.yml/badge.svg)
 [![Codecov](https://codecov.io/gh/takuizum/Equate.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/takuizum/Equate.jl)
 [![Coveralls](https://coveralls.io/repos/github/takuizum/Equate.jl/badge.svg?branch=master)](https://coveralls.io/github/takuizum/Equate.jl?branch=master)
 
@@ -15,17 +15,17 @@ Equate test scores under the equivalent or non-equivalent group with anchor test
 - NEAT (Non-Equivalent group design with Anchor Test design)
   - Tucker (Linear equating under some assumptions)
   - Braun & Holland (Linear equating using synthetic population)
-  - Chained Linear
+  - Chained Linear (also Mean)
   - Chained Equipercentile
   - Frequency Estimation (Equipercentile equating using synthetic population)
 
 - Presmoothing
-  - Log linear smoothing with arbitrary degree.
+  - Log linear smoothing with an arbitrary degree.
 
 - Kernel smoothong
   - Gaussian kernel is only supported now.
   - The optimal bandwidth can be estimated.
-  - 
+
 
 # How to use (SG design)
 
@@ -45,30 +45,6 @@ dfY = freqtab(dataY)
 Linear(ftX, ftY)
 ```
 6. (Coming soon...) Evaluate SEE.
-
-
-
-<!---
-# MEMO
-using PkgTemplates
-tmp = Template(;
-    user = "takuizum",
-    license = "MIT",
-    authors = "Takumi Shibuya",
-    dir = "YOURDIR",
-    julia_version = v"1.3.0",
-    ssh = false,
-    plugins=[
-        TravisCI(),
-        Codecov(),
-        Coveralls(),
-            ]
-    )
-
-generate("Equate",tmp)
-
---->
-
 
 # Version Update History
 
