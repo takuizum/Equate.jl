@@ -1,6 +1,5 @@
 using Equate
 using Test
-using CSV
 
 @testset "Equate.jl" begin
     # ReadData
