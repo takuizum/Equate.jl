@@ -204,3 +204,14 @@ test = SummaryStats(ftX);
 
 # Presmooth model comparison
 ftX = freqtab(KBneatX.total)
+
+using CSV, Plots
+ACTmath = DataFrame!(CSV.File("test/data/ACTmath.csv"))
+X = ExpandTable(ACTmath.scale, ACTmath.xcount)
+Y = expandtable(ACTmath.scale, ACTmath.ycount)
+ftX = freqtab(X; scale = 0:1:40)
+ftY = freqtab(Y; scale = 0:1:40)
+
+plot()
+
+Equipercentile(ftX, ftY)
