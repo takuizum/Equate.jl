@@ -48,6 +48,9 @@ Linear(ftX, ftY)
 
 # Version Update History
 
+### 0.1.6
+
+- Change CI tool.
 ### 0.1.5
 
 - Fix plot recipes
@@ -65,7 +68,7 @@ Linear(ftX, ftY)
 
 - The listwise deletion for missing values is implemented.
 
-- **Experimental** Add descriptions about compat in `Priject.toml`.
+- **Experimental** Add descriptions about compat in `Project.toml`.
 
 ### 0.1.2
 
