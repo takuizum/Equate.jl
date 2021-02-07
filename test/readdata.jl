@@ -2,9 +2,9 @@ using Test
 using Equate
 using CSV, Statistics, DataFrames
 
-ACTmath = DataFrame!(CSV.File("data/ACTmath.csv"))
-KBneatX = DataFrame!(CSV.File("data/KBneatX.csv"))
-KBneatY = DataFrame!(CSV.File("data/KBneatY.csv"))
+ACTmath = DataFrame!(CSV.File("test/data/ACTmath.csv"))
+KBneatX = DataFrame!(CSV.File("test/data/KBneatX.csv"))
+KBneatY = DataFrame!(CSV.File("test/data/KBneatY.csv"))
 
 ACTmathX = ExpandTable(ACTmath.scale, ACTmath.xcount)
 ACTmathY = ExpandTable(ACTmath.scale, ACTmath.ycount)

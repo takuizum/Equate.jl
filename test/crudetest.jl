@@ -102,8 +102,8 @@ Equipercentile(ftX, ftY)
 
 # Nonequivalent group design
 using CSVFiles, DataFrames
-KBneatX = DataFrame!(load("data/KBneatX.csv"))
-KBneatY = DataFrame!(load("data/KBneatY.csv"))
+KBneatX = DataFrame!(load("test/data/KBneatX.csv"))
+KBneatY = DataFrame!(load("test/data/KBneatY.csv"))
 
 ftX = freqtab(KBneatX.total, KBneatX.anchor)
 ftY = freqtab(KBneatY.total, KBneatY.anchor)
@@ -123,6 +123,9 @@ plot(resTk.table.scaleX, resTk.table.lYx; label = "Tucker", xlabel = "scale X", 
 # Levine # common = :internal is matched
 resLv = LevineCongeneric(ftX, ftY; common = :internal)
 resTkr = requate.equate(rftX, rftY, type = "l", method = "levine")
+# external
+resLv = LevineCongeneric(ftX, ftY; common = :external)
+resTkr = requate.equate(rftX, rftY, type = "l", method = "levine", internal = false)
 
 # Chained Linear # Matched
 ObservableStats(ftY)
@@ -145,7 +148,7 @@ plot!(resFE.table.eYx, resFE.table.scaleY; label = "Frequency Estimation", xlabe
 # Chained Equipercentile
 resCE = ChainedEquipercentile(ftX, ftY; case = :upper)
 resCEr = requate.equate(rftX, rftY, type = "e", method = "chained")
-resCEr["concordance"][2] - resCE.table.eYx
+resCEr["concordance"][2] .- resCE.table.eYx
 plot!(resCE.table.eYx, resCE.table.scaleX; label = "Chained Equipercentile", xlabel = "scale X", ylabel = "scale Y", legend = :topleft)
 
 # smoothed NEAT
