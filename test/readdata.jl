@@ -1,52 +1,12 @@
 using Test
 using Equate
-using CSV, Statistics, DataFrames
+using Statistics, DataFrames
 
 # ACTmath = DataFrame!(CSV.File("test/data/ACTmath.csv"))
-ACTmath = DataFrame([0 0 0
-1 1 1
-2 1 3
-3 3 13
-4 9 42
-5 18 59
-6 59 95
-7 67 131
-8 91 158
-9 144 161
-10 149 194
-11 192 164
-12 192 166
-13 192 197
-14 201 177
-15 204 158
-16 217 169
-17 181 132
-18 184 158
-19 170 151
-20 201 134
-21 147 137
-22 163 122
-23 147 110
-24 140 116
-25 147 132
-26 126 104
-27 113 104
-28 100 114
-29 106 97
-30 107 107
-31 91 88
-32 83 80
-33 73 79
-34 72 70
-35 75 61
-36 50 48
-37 37 47
-38 38 29
-39 23 32
-40 15 12], ["scale","xcount","ycount"])
+# KBneatX = DataFrame!(CSV.File("test/data/KBneatX.csv"))
+# KBneatY = DataFrame!(CSV.File("test/data/KBneatY.csv"))
 
-KBneatX = DataFrame!(CSV.File("test/data/KBneatX.csv"))
-KBneatY = DataFrame!(CSV.File("test/data/KBneatY.csv"))
+include("testdata.jl")
 
 ACTmathX = ExpandTable(ACTmath.scale, ACTmath.xcount)
 ACTmathY = ExpandTable(ACTmath.scale, ACTmath.ycount)
