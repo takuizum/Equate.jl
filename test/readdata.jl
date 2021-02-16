@@ -2,10 +2,6 @@ using Test
 using Equate
 using Statistics, DataFrames
 
-# ACTmath = DataFrame!(CSV.File("test/data/ACTmath.csv"))
-# KBneatX = DataFrame!(CSV.File("test/data/KBneatX.csv"))
-# KBneatY = DataFrame!(CSV.File("test/data/KBneatY.csv"))
-
 include("testdata.jl")
 
 ACTmathX = ExpandTable(ACTmath.scale, ACTmath.xcount)
