@@ -10,6 +10,10 @@ using Test
     include("NEATdesign.jl")
     # Smoothing
     include("Smoothing.jl")
+    # expandtable
+    include("expandtable.jl")
+    # coef
+    include("coef.jl")
 end
 
 
