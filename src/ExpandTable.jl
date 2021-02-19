@@ -1,5 +1,6 @@
 """
-    ExpandTable(scale, freq) => Array{Int64,1}
+    ExpandTable(scale, freq) => Array{Int64, 1}
+    expandtable(scale, frea) => Array{Int64, 1}
 
 Expand raw score array from freqency table. 
 
