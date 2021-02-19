@@ -45,7 +45,7 @@ function PFl(P, F::EG)
     return isinf(x) || isnan(x) ? xl + F.interval/2.0 : x + xl + F.interval/2.0
 end
 # equipercentile equating
-struct SGEquateResult
+struct SGEquateResult <: SGEquateMethod
     method
     table
     estimates
