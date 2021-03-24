@@ -8,6 +8,7 @@ using Distributions: Poisson, Normal, pdf, cdf
 using Optim: optimize, BFGS
 using GLM: glm, predict, @formula, LogLink, coef
 using StatsModels: TableRegressionModel
+using StatsBase
 import StatsBase: coef
 
 export

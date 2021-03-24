@@ -219,3 +219,12 @@ ftY = freqtab(Y; scale = 0:1:40)
 plot()
 
 Equipercentile(ftX, ftY)
+
+# Examine df
+tab = freqtab(expandtable(ACTmath.scale, ACTmath.xcount))
+fit = presmoothing(tab, 10)
+
+fit isa DataFrame
+
+presmoothing(tab, Equate.fml₄)
+
