@@ -265,9 +265,9 @@ function FrequencyEstimation(X::NEAT, Y::NEAT; w₁ = length(X.rawX) / (length(X
     fsy = @. w₁ * g₁y + w₂ * Y.tabX.freq
     # Equipercentile Equating
     ftX = FreqTab(DataFrame(scale = X.tabX.scale, freq = fsx, cumprob = cumsum(fsx) ./ sum(fsx)),
-                  X.rawX, X.intervalX)
+                  X.rawX, X.intervalX, (; dummy = "dummy"))
     ftY = FreqTab(DataFrame(scale = Y.tabX.scale, freq = fsy, cumprob = cumsum(fsy) ./ sum(fsy)),
-                  Y.rawX, Y.intervalX)
+                  Y.rawX, Y.intervalX, (; dummy = "dummy"))
     tbl = Equipercentile(ftX, ftY; case = case)
     return NEATEquateResult(
         :FrequencyEstimation, 

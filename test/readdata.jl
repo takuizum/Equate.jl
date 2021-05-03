@@ -26,7 +26,7 @@ neattabX = freqtab(KBneatX.total, KBneatX.anchor; scaleX = 0:1:36, scaleV = 0:1:
 neattabY = freqtab(KBneatY.total, KBneatY.anchor; scaleX = 0:1:36, scaleV = 0:1:12)
 
 # Dummy table for NEAT equipercentile method
-dummytabX = Equate.SGFreqTab(
+dummytabX = Equate.NEATFreqTab(
     DataFrame(scale = [0, 1, 2, 3, 4, 5], freq = [.1, .15, .25, .25, .15, .10] .* 100, prob = [.1, .15, .25, .25, .15, .10], cumprob = cumsum([.1, .15, .25, .25, .15, .10]) ), 
     DataFrame(scale = [0, 1, 2, 3], freq = [.2, .4, .2, .2] .* 100, prob = [.2, .4, .2, .2], cumprob = cumsum([.2, .4, .2, .2])), 
     ExpandTable([0, 1, 2, 3, 4, 5], Int64.([.1, .15, .25, .25, .15, .10] .* 100)), 
@@ -38,10 +38,12 @@ dummytabX = Equate.SGFreqTab(
      .06 .12 .05 .02
      .03 .12 .05 .05
      .02 .03 .04 .06
-     .01 .01 .02 .06] .* 100
+     .01 .01 .02 .06] .* 100, 
+    (;dummyX = "dummy"), 
+    (;dummyV = "dummy")
 )
 
-dummytabY = Equate.SGFreqTab(
+dummytabY = Equate.NEATFreqTab(
     DataFrame(scale = [0, 1, 2, 3, 4, 5], freq = [.08, .2, .22, .25, .15, .1] .* 100, prob = [.08, .2, .22, .25, .15, .1], cumprob = cumsum([.08, .2, .22, .25, .15, .1]) ), 
     DataFrame(scale = [0, 1, 2, 3], freq = [.2, .2, .4, .2] .* 100, prob = [.2, .2, .4, .2], cumprob = cumsum([.2, .2, .4, .2])), 
     ExpandTable([0, 1, 2, 3, 4, 5], Int64.([.08, .2, .22, .25, .15, .1] .* 100)), 
@@ -53,6 +55,8 @@ dummytabY = Equate.SGFreqTab(
      .03 .05 .12 .02
      .03 .04 .13 .05
      .02 .02 .05 .06
-     .01 .01 .02 .06] .* 100
+     .01 .01 .02 .06] .* 100,
+    (;dummyX = "dummy"), 
+    (;dummyV = "dummy")
 )
 
