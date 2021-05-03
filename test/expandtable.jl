@@ -1,7 +1,7 @@
 include("testdata.jl")
 
-@testset "expandtable" begin
+@testset "expandtable(Single)" begin
     dat = expandtable(ACTmath.scale, ACTmath.xcount)
-    tab = freqtab(dat)
-    @test tab.tab.freq == ACTmath.xcount[begin+1:end]
+    ft = freqtab(dat)
+    @test ft.tab.freq == ACTmath.xcount[begin+1:end]
 end

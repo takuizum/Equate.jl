@@ -10,6 +10,7 @@ using GLM: glm, predict, @formula, LogLink, coef
 using StatsModels: TableRegressionModel
 using StatsBase
 import StatsBase: coef
+using Printf
 
 export
     # Basic function
@@ -69,6 +70,7 @@ include("NEATdesign.jl")
 include("Smoothing.jl")
 include("coef.jl")
 include("ExpandTable.jl")
+include("show.jl")
 
 """
     A Julia package for test equating.

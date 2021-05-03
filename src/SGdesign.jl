@@ -86,7 +86,7 @@ function Equipercentile(X::EG, Y::EG; case = :lower)
     end
     tbl = DataFrame(scaleX = scaleX, eYx = eYx)
     return SGEquateResult(
-        :Equipercentile,
+        Symbol("Equipercentile($(case))"),
         tbl, 
         nothing
     )
