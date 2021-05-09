@@ -5,8 +5,8 @@
 Return equating coefficient. The input object is equated result under the SG and NEAT design method.
 """
 function coef(x::EquateMethod)
-    if all(isnothing.(match.(r"estimates", string.(fieldnames(typeof(x))))))
-        println("$(typeof(x)) has no field `estimates`")
+    if isnothing(x.estimates)
+        x.table[:, 2]
     else
         x.estimates
     end

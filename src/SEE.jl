@@ -137,16 +137,43 @@ end
 
 # Attach methods to functions in  bootstrab.jl
 
-# function Bootstrap.draw!(x:NamedTuple{(:X, :Y), Tuple{FreqTab, FreqTab}}, o:NamedTuple{(:X, :Y), Tuple{FreqTab, FreqTab}})
-#     idx = sample(examineeID(x.X.raw), length(x.X.raw))
-#     for (to, from) in enumerate(idx)
-#         o.X.raw[to] = x.X.raw[from]
-#         o.Y.raw[to] = x.Y.raw[from]
-#     end
-#     # Re-evaluate freqtab
-#     recalculate!(o.X)
-#     recalculate!(o.Y)
-# end
+function Bootstrap.draw!(x::NamedTuple{(:X, :Y), Tuple{T, T}}, o::NamedTuple{(:X, :Y), Tuple{T, T}}) where {T <: FreqTab}
+    idx = sample(examineeID(x.X.raw), length(x.X.raw))
+    idy = sample(examineeID(x.Y.raw), length(x.Y.raw))
+    for (to, from) in enumerate(idx)
+        o.X.raw[to] = x.X.raw[from]
+    end
+    for (to, from) in enumerate(idy)
+        o.Y.raw[to] = x.Y.raw[from]
+    end
+    # Re-evaluate freqtab
+    recalculate!(o.X)
+    recalculate!(o.Y)
+end
+
+function Bootstrap.draw!(x::NamedTuple{(:X, :Y), Tuple{T, T}}, o::NamedTuple{(:X, :Y), Tuple{T, T}}) where {T <: NEATFreqTab}
+    idx = sample(examineeID(x.X.rawX), length(x.X.rawX))
+    idy = sample(examineeID(x.Y.rawX), length(x.Y.rawX))
+    for (to, from) in enumerate(idx)
+        o.X.rawX[to] = x.X.rawX[from]
+        o.X.rawV[to] = x.X.rawV[from]
+    end
+    for (to, from) in enumerate(idy)
+        o.Y.rawX[to] = x.Y.rawX[from]
+        o.Y.rawV[to] = x.Y.rawV[from]
+    end
+    # Re-evaluate freqtab
+    recalculate!(o.X)
+    recalculate!(o.Y)
+end
+
+function Base.size(x::NamedTuple{(:X, :Y), Tuple{T, T}}) where {T <: FreqTab}
+    "X $(x.X.stats.N)", "Y $(x.Y.stats.N)"
+end
+
+function Base.size(x::NamedTuple{(:X, :Y), Tuple{T, T}}) where {T <: NEATFreqTab}
+    "X.Main $(x.X.statsX.N)", "X.Common $(x.X.statsV.N)", "Y.Main $(x.Y.statsX.N)", "Y.Main $(x.Y.statsV.N)"
+end
 
 # Standard Equating method
 

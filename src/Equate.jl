@@ -11,6 +11,8 @@ using StatsModels: TableRegressionModel
 using StatsBase
 import StatsBase: coef
 using Printf
+import Base: copy, show
+import Bootstrap: draw!
 
 export
     # Basic function
@@ -47,6 +49,9 @@ export
     # SEE
     recalculate!,
     initialize!,
+    copy,
+    show,
+    draw!,
 
     # struct
     NEATEquateResult, 
