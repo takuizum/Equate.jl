@@ -211,7 +211,7 @@ function BraunHolland(X::NEAT, Y::NEAT; w₁ = length(X.rawX) / (length(X.rawX) 
     # synthetic population
     fsx = @. w₁ * X.tableX.prob + w₂ * f₂x; fsx = fsx ./ sum(fsx)
     fsy = @. w₁ * g₁y + w₂ * Y.tableX.prob; fsy = fsy ./ sum(fsy)
-    @show f₂x, g₁y
+    # @show f₂x, g₁y
     # synthetic pupulation parameter
     μsx = fsx' * X.tableX.scale
     σsx = sqrt(fsx' * (X.tableX.scale .- μsx) .^2)

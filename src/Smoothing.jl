@@ -31,7 +31,7 @@ const fml₈ = @formula(freq ~ 1 + scale + scale^2 + scale^3 + scale^4 + scale^5
 const fml₉ = @formula(freq ~ 1 + scale + scale^2 + scale^3 + scale^4 + scale^5 + scale^6 + scale^7 + scale^8 + scale^9)
 const fml₁₀ = @formula(freq ~ 1 + scale + scale^2 + scale^3 + scale^4 + scale^5 + scale^6 + scale^7 + scale^8 + scale^9 + scale^10)
 
-struct SmoothedFreqTab <: EG
+mutable struct SmoothedFreqTab <: EG
     table
     raw
     interval
@@ -145,7 +145,7 @@ function presmoothing(F::EG, degree::Int64)
     DataFrame(degree = [1:1:degree;], aic = AIC, aicc = AICC, bic = BIC, loglik = LL, deviance = DEVIANCE, fit = FIT)
 end
 
-struct SmoothedNEATFreqTab <: NEAT
+mutable struct SmoothedNEATFreqTab <: NEAT
     tableX
     tableV
     rawX

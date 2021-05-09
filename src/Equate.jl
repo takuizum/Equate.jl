@@ -44,6 +44,10 @@ export
     BandwidthPenalty,
     EstBandwidth,
 
+    # SEE
+    recalculate!,
+    initialize!,
+
     # struct
     NEATEquateResult, 
     SGEquateResult
@@ -71,6 +75,7 @@ include("Smoothing.jl")
 include("coef.jl")
 include("ExpandTable.jl")
 include("show.jl")
+include("SEE.jl")
 
 """
     A Julia package for test equating.

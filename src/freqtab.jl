@@ -32,7 +32,7 @@ Create `FreqTab`, which is used for SG design methods in Equate package.
 # Arguments
 
 - `X` Vector of raw test score that dose not contain missing value. The order of examinees should correspond to another vector to be equated.
-- `interval` The interval size of scale (must be Float64). Default is 1.0
+- `interval` The interval size of scale (must be Float64). Default is 1.0. If `scale` was specified by user, ignored.
 - `scale` Vector or StepRange represents a scale of test score X.
 """
 function freqtab(X; interval = 1.0, scale = minimum(X):interval:maximum(X))
@@ -86,8 +86,8 @@ function freqtab(X, V; intervalX = 1.0, intervalV = 1.0, scaleX = minimum(X):int
     cumprobx = cumsum(freqx)./ sum(freqx)
     freqv = map(j -> count(i -> i == j, V), scaleV)
     cumprobv = cumsum(freqv)./ sum(freqv)
-    tableX = DataFrame(scale = scaleX, freq = freqx, cumprob = cumprobx, prob = freqx ./ sum(freqx))
-    tableV = DataFrame(scale = scaleV, freq = freqv, cumprob = cumprobv, prob = freqv ./ sum(freqv))
+    tableX = DataFrame(scale = scaleX, freq = freqx, cumfreq = cumsum(freqx), cumprob = cumprobx, prob = freqx ./ sum(freqx))
+    tableV = DataFrame(scale = scaleV, freq = freqv, cumfreq = cumsum(freqv), cumprob = cumprobv, prob = freqv ./ sum(freqv))
     marginaltable = zeros(Int64, length(scaleX), length(scaleV))
     for (xi, xv) in enumerate(scaleX), (vi, vv) in enumerate(scaleV)
         marginaltable[xi,vi] = count(i -> i == vv, V[X .== xv])
