@@ -1,18 +1,16 @@
 module Equate
 # =======
 
-using DataFrames: DataFrame
+using DataFrames
 using Statistics: mean, std, cov, cor, var
-using StatsBase: kurtosis, skewness
+using StatsBase: kurtosis, skewness #, aic, aicc, bic, loglikelihood, deviance
 using Distributions: Poisson, Normal, pdf, cdf
 using Optim: optimize, BFGS
 using GLM: glm, predict, @formula, LogLink, coef
 using StatsModels: TableRegressionModel
-using StatsBase
+using RecipesBase
+# import Plots: cgrad
 import StatsBase: coef
-using Printf
-import Base: copy, show
-import Bootstrap: draw!
 
 export
     # Basic function
@@ -41,17 +39,15 @@ export
 
     # Support functions
     round2,
+    PRF,
+    CDF,
+    PFu,
+    PFl,
     LogLinearFormula,
+    @LogLinearFormula,
     ObservableStats,
     BandwidthPenalty,
     EstBandwidth,
-
-    # SEE
-    recalculate!,
-    initialize!,
-    copy,
-    show,
-    draw!,
 
     # struct
     NEATEquateResult, 
@@ -79,8 +75,7 @@ include("NEATdesign.jl")
 include("Smoothing.jl")
 include("coef.jl")
 include("ExpandTable.jl")
-include("show.jl")
-include("SEE.jl")
+include("recipe.jl")
 
 """
     A Julia package for test equating.

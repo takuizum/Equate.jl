@@ -2,25 +2,25 @@
 round2(x; digits = 0) = sign(x) * floor( abs(x) * 10.0^digits + 0.5 ) / (10.0^digits)
 # Percentile Rank Function
 function CDF(x, F::EG)
-    if x < minimum(F.table.scale) return 0 end
-    if x > maximum(F.table.scale) return 1 end
-    F.table.cumprob[F.table.scale .== x][1]
+    if x < minimum(F.tab.scale) return 0 end
+    if x > maximum(F.tab.scale) return 1 end
+    F.tab.cumprob[F.tab.scale .== x][1]
 end
 function PRF(x, F::EG)
-    if x < (minimum(F.table.scale) - F.interval/2.0) return 0.0 end
-    if x ≥ (maximum(F.table.scale) + F.interval/2.0) return 100.0 end
+    if x < (minimum(F.tab.scale) - F.interval/2.0) return 0.0 end
+    if x ≥ (maximum(F.tab.scale) + F.interval/2.0) return 100.0 end
     x′ = round2(x)
-    Fx1 = CDF(x′-F.interval, F)#F.table.cumfreq[F.table.scale .== (x⃰-1.0)]
-    Fx = CDF(x′, F)#F.table.cumfreq[F.table.scale .== x⃰]
+    Fx1 = CDF(x′-F.interval, F)#F.tab.cumfreq[F.tab.scale .== (x⃰-1.0)]
+    Fx = CDF(x′, F)#F.tab.cumfreq[F.tab.scale .== x⃰]
     P = 100*(Fx1+(x-x′+F.interval/2.0)*(Fx-Fx1))[1]
     return P
 end
 # Percentile Function
 function p_search_descend(P, F::EG, offset)
-    x = nothing;iter = length(F.table.scale)
+    x = nothing;iter = length(F.tab.scale)
     while x === nothing
         iter -= 1
-        x =  100CDF(F.table.scale[iter], F) > P ? nothing : F.table.scale[iter+offset]
+        x =  100CDF(F.tab.scale[iter], F) > P ? nothing : F.tab.scale[iter+offset]
     end
     return x
 end
@@ -28,12 +28,12 @@ function p_search_ascend(P, F::EG, offset)
     x = nothing;iter = 0
     while x === nothing
         iter += 1
-        x = 100CDF(F.table.scale[iter], F) < P ? nothing : iter == 1 ? 0.0 : F.table.scale[iter+offset]
+        x = 100CDF(F.tab.scale[iter], F) < P ? nothing : iter == 1 ? 0.0 : F.tab.scale[iter+offset]
     end
     return x
 end
 function PFu(P, F::EG)
-    if P ≥ 100.0 return (maximum(F.table.scale) + .5) end
+    if P ≥ 100.0 return (maximum(F.tab.scale) + .5) end
     xu = P > 50.0 ? p_search_descend(P, F, 1) : p_search_ascend(P, F, 0)
     x = (P/100 - CDF(xu-F.interval, F)) / (CDF(xu, F) - CDF(xu-F.interval, F))
     return isinf(x) || isnan(x) ? xu -F.interval/2.0 : x + xu -F.interval/2.0
@@ -45,11 +45,10 @@ function PFl(P, F::EG)
     return isinf(x) || isnan(x) ? xl + F.interval/2.0 : x + xl + F.interval/2.0
 end
 # equipercentile equating
-mutable struct SGEquateResult <: SGEquateMethod
+struct SGEquateResult
     method
     table
     estimates
-    data
 end
 """
     Equipercentile(X::EG, Y::EG; case = :middle)
@@ -68,7 +67,7 @@ The second one is equated score from test Y, which is equipercentile score on th
 In my example cases, it seems that equate package in R uses `lower` case to equate.
 """
 function Equipercentile(X::EG, Y::EG; case = :lower)
-    scaleX = X.table.scale
+    scaleX = X.tab.scale
     eYxu = zeros(Float64, length(scaleX))
     eYxl = zeros(Float64, length(scaleX))
     for (i,v) in enumerate(scaleX)
@@ -87,10 +86,9 @@ function Equipercentile(X::EG, Y::EG; case = :lower)
     end
     tbl = DataFrame(scaleX = scaleX, eYx = eYx)
     return SGEquateResult(
-        Symbol("Equipercentile($(case))"),
+        :Equipercentile,
         tbl, 
-        nothing, 
-        (X = X, Y = Y)
+        nothing
     )
 end
 # linear equating
@@ -104,13 +102,12 @@ function Linear(X::EG, Y::EG)
     μX = mean(X.raw); σX = std(X.raw)
     μY = mean(Y.raw); σY = std(Y.raw)
     slope = σY/σX; intercept = μY - slope*μX
-    lYx = @. X.table.scale * slope + intercept
-    tbl = DataFrame(scaleX = X.table.scale, lYx = lYx)
+    lYx = @. X.tab.scale * slope + intercept
+    tbl = DataFrame(scaleX = X.tab.scale, lYx = lYx)
     return SGEquateResult(
         :Linear,
         tbl, 
-        (slope = slope, intercept = intercept), 
-        (X = X, Y = Y)
+        (slope = slope, intercept = intercept)
     )
 end
 
@@ -125,12 +122,11 @@ function Mean(X::EG, Y::EG)
     μX = mean(X.raw)
     μY = mean(Y.raw)
     slope = 1.0; intercept = μY - μX
-    lYx = @. X.table.scale * slope + intercept
-    tbl = DataFrame(scaleX = X.table.scale, lYx = lYx)
+    lYx = @. X.tab.scale * slope + intercept
+    tbl = DataFrame(scaleX = X.tab.scale, lYx = lYx)
     return SGEquateResult(
         :Mean, 
         tbl, 
-        (slope = slope, intercept = intercept), 
-        (X = X, Y = Y)
+        (slope = slope, intercept = intercept)
     )
 end

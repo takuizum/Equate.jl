@@ -1,6 +1,6 @@
 # Equate
 
-[![Build Status](https://travis-ci.com/takuizum/Equate.jl.svg?branch=master)](https://travis-ci.com/takuizum/Equate.jl)
+![CI](https://github.com/takuizum/Equate.jl/workflows/CI/badge.svg)
 [![Codecov](https://codecov.io/gh/takuizum/Equate.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/takuizum/Equate.jl)
 [![Coveralls](https://coveralls.io/repos/github/takuizum/Equate.jl/badge.svg?branch=master)](https://coveralls.io/github/takuizum/Equate.jl?branch=master)
 
@@ -10,97 +10,95 @@ Equate test scores under the equivalent or non-equivalent group with anchor test
 
 - SG (Single Group design)
   - Linear
+  - Mean
   - Equipercentile
 
 - NEAT (Non-Equivalent group design with Anchor Test design)
   - Tucker (Linear equating under some assumptions)
   - Braun & Holland (Linear equating using synthetic population)
-  - Chained Linear
+  - Chained Linear (also Mean)
   - Chained Equipercentile
   - Frequency Estimation (Equipercentile equating using synthetic population)
 
 - Presmoothing
-  - Log linear smoothing with arbitrary degree.
+  - Log linear smoothing with an arbitrary degree.
 
 - Kernel smoothong
   - Gaussian kernel is only supported now.
   - The optimal bandwidth can be estimated.
-  - 
 
-# How to use (SG design)
+
+# Example1: SG design.
 
 1. Prepare data set. Integer or Float vector.
+```
+using Distributions, Random
+Random.seed!(1234)
+X = rand(BetaBinomial(100, 4, 10), 500);
+Y = rand(BetaBinomial(100, 6, 10), 500);
+```
+
 2. Convert the data vector to `FreqTab`
 
 ```
-# `data` is numeric vector
-ftX = freqtab(dataX)
-dfY = freqtab(dataY)
+# `data` must be Real vector
+julia> ftX = freqtab(X; scale = 0:1:100)
+Frequency table stats.
+         N :      500 
+   Missing :        0 
+       min :        1 
+      maxs :       71 
+         μ : 28.39000 
+         σ : 12.68921 
+  kurtosis : 0.00127 
+  skewness : 0.52615 
+
+
+julia> ftY = freqtab(Y; scale = 0:1:100)
+Frequency table stats.
+         N :      500 
+   Missing :        0 
+       min :        6 
+      maxs :       77 
+         μ : 37.04000 
+         σ : 13.11115 
+  kurtosis : -0.44152 
+  skewness : 0.22442 
 ```
 
 3. Presmoothing by using `presmoothing`
 4. (Optional) Continuization by using `KernelSmoothing`
-5. Equate score X to scale Y by arbitrary method.
+5. Equate score X to scale Y by the arbitrary method.
 ```
-Linear(ftX, ftY)
+# Linear Equating
+julia> eq_lin = Linear(ftX, ftY)
+Equating design: EG
+Equated method: Linear.
+To show the table, extract `table` element.
+
+# Equipercentile equating
+julia> eq_eqp = Equipercentile(ftX, ftY)
+Equating design: EG
+Equated method: Equipercentile(lower).
+To show the table, extract `table` element.
 ```
-6. (Coming soon...) Evaluate SEE.
+6. Evaluate SEE (Standard Error of Equating). Now, Only `BasicSampling(n)` is supported.
 
+```
+julia> using Bootstrap, Random
+julia> Random.seed!(1234)
 
+julia> @time bootse_lin = bootstrap(x -> coef(Linear(x...)), eq_lin.data, BasicSampling(1000))
+  1.727280 seconds (10.12 M allocations: 458.347 MiB, 5.56% gc time, 63.60% compilation time)
+Bootstrap Sampling
+  Estimates:
+     Var │ Estimate  Bias         StdError
+         │ Float64   Float64      Float64
+    ─────┼─────────────────────────────────
+       1 │  1.03325  0.000560431  0.043795
+       2 │  7.70597  0.00756638   1.2771
+  Sampling: BasicSampling
+  Samples:  1000
+  Data:     NamedTuple{(:X, :Y), Tuple{Equate.FreqTab, Equate.FreqTab}}: { X 500 × Y 500 }
+```
 
-<!---
-# MEMO
-using PkgTemplates
-tmp = Template(;
-    user = "takuizum",
-    license = "MIT",
-    authors = "Takumi Shibuya",
-    dir = "YOURDIR",
-    julia_version = v"1.3.0",
-    ssh = false,
-    plugins=[
-        TravisCI(),
-        Codecov(),
-        Coveralls(),
-            ]
-    )
-
-generate("Equate",tmp)
-
---->
-
-
-# Version Update History
-
-### 0.1.5
-
-- Fix plot recipes
-- Presmoothing for NEAT design can be more accessible.
-
-### 0.1.4
-
-*New features*
-
-- Plot recipes. Support `plot` method.
-- Fix `KernelSmoothing` function.
-- Improve penalty function to estimate the optimal bandwidth. Add the penalty related to the derivartive.
-
-### 0.1.3
-
-- The listwise deletion for missing values is implemented.
-
-- **Experimental** Add descriptions about compat in `Priject.toml`.
-
-### 0.1.2
-
-- `Linear` and `BraunHolland` functions were updated to return not only the concordance table but also equating coefficients.
-
-- Change specification of arguments of `presmoothing`, `fml`, as the non named arg.
-
-### 0.1.1
-
-Reverse equating direction to match the result to R's `equate` package.
-
-### 0.1.0
-
-A first release.
