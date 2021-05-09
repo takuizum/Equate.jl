@@ -3,8 +3,13 @@
 """
     FreqTab(tab, raw, interval stats)
 The basic struct for all equating.
+
+- `table` A data frame of test scales and thier frequaencies.
+- `raw` A raw vector. The order of examinees should correspond to another `FreqTab.raw`
+- `interval` The interval of the score scale.
+- `stats` Basic stats of the frequency table.
 """
-struct FreqTab <: EG
+mutable struct FreqTab <: EG
     table
     raw
     interval
@@ -22,11 +27,11 @@ end
 """
     freqtab(X; interval = 1.0, scale = minimum(X):interval:maximum(X))
     
-Create `FreqTab`, which is used for all equating methods in Equate package, for SG design.
+Create `FreqTab`, which is used for SG design methods in Equate package.
 
 # Arguments
 
-- `X` Vector of raw test score that dose not contain missing value.
+- `X` Vector of raw test score that dose not contain missing value. The order of examinees should correspond to another vector to be equated.
 - `interval` The interval size of scale (must be Float64). Default is 1.0
 - `scale` Vector or StepRange represents a scale of test score X.
 """
@@ -40,7 +45,7 @@ function freqtab(X; interval = 1.0, scale = minimum(X):interval:maximum(X))
 end
 
 # equivalent group design
-struct NEATFreqTab <: NEAT
+mutable struct NEATFreqTab <: NEAT
     tableX
     tableV
     rawX # independent form
@@ -55,7 +60,7 @@ end
 """
     freqtab(X, V;intervalX = 1.0, intervalV = 1.0, scaleX = minimum(X):intervalX:maximum(X), scaleV = minimum(V):intervalV:maximum(V))
 
-Create `SGFreqTab` for NEAT design.
+Create `NEATFreqTab` for NEAT design.
 
 # Arguments
 

@@ -20,7 +20,7 @@ function SummaryStats(F::NEAT)
     return df;
 end
 
-struct NEATEquateResult <: NEATEquateMethod
+mutable struct NEATEquateResult <: NEATEquateMethod
     method
     table
     synthetic
