@@ -46,12 +46,12 @@ function Base.show(io::IO, x::NEATFreqTab)
 end
 
 function Base.show(io::IO, x::NEATEquateResult)
-    println(io, "Equating design: NEAT\nEquated method: $(x.method).\nTo show the table, extract `tbl` element.")
+    println(io, "Equating design: NEAT\nEquated method: $(x.method).\nTo show the table, extract `table` element.")
     println(io, x.synthetic)
     return
 end
 
 function Base.show(io::IO, x::SGEquateResult)
-    println(io, "Equating design: EG\nEquated method: $(x.method).\nTo show the table, extract `tbl` element.")
+    println(io, "Equating design: EG\nEquated method: $(x.method).\nTo show the table, extract `table` element.")
     return
 end

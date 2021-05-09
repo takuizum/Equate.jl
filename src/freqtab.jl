@@ -5,7 +5,7 @@
 The basic struct for all equating.
 """
 struct FreqTab <: EG
-    tab
+    table
     raw
     interval
     stats
@@ -41,8 +41,8 @@ end
 
 # equivalent group design
 struct NEATFreqTab <: NEAT
-    tabX
-    tabV
+    tableX
+    tableV
     rawX # independent form
     rawV # common form
     intervalX
@@ -81,13 +81,13 @@ function freqtab(X, V; intervalX = 1.0, intervalV = 1.0, scaleX = minimum(X):int
     cumprobx = cumsum(freqx)./ sum(freqx)
     freqv = map(j -> count(i -> i == j, V), scaleV)
     cumprobv = cumsum(freqv)./ sum(freqv)
-    tabX = DataFrame(scale = scaleX, freq = freqx, cumprob = cumprobx, prob = freqx ./ sum(freqx))
-    tabV = DataFrame(scale = scaleV, freq = freqv, cumprob = cumprobv, prob = freqv ./ sum(freqv))
+    tableX = DataFrame(scale = scaleX, freq = freqx, cumprob = cumprobx, prob = freqx ./ sum(freqx))
+    tableV = DataFrame(scale = scaleV, freq = freqv, cumprob = cumprobv, prob = freqv ./ sum(freqv))
     marginaltable = zeros(Int64, length(scaleX), length(scaleV))
     for (xi, xv) in enumerate(scaleX), (vi, vv) in enumerate(scaleV)
         marginaltable[xi,vi] = count(i -> i == vv, V[X .== xv])
     end
-    return NEATFreqTab(tabX, tabV, X, V, intervalX, intervalV, marginaltable, statsX, statsV)
+    return NEATFreqTab(tableX, tableV, X, V, intervalX, intervalV, marginaltable, statsX, statsV)
 end
 # Frequency table from smoothed frequency table.
 """
@@ -101,9 +101,9 @@ Create `NEATFreqTab` which has been smoothed (Log Linear or Kernel method).
 - `V` Smoothed `FreqTab` of anchor test.
 """
 function freqtab(X::EG, V::EG)
-    marginaltable = zeros(Int64, length(X.tab.scale), length(V.tab.scale))
-    for (xi, xv) in enumerate(X.tab.scale), (vi, vv) in enumerate(V.tab.scale)
+    marginaltable = zeros(Int64, length(X.table.scale), length(V.table.scale))
+    for (xi, xv) in enumerate(X.table.scale), (vi, vv) in enumerate(V.table.scale)
         marginaltable[xi,vi] = count(i -> i == vv, V.raw[X.raw .== xv])
     end
-    return NEATFreqTab(X.tab, V.tab, X.raw, V.raw, X.interval, V.interval, marginaltable)
+    return NEATFreqTab(X.table, V.table, X.raw, V.raw, X.interval, V.interval, marginaltable)
 end
