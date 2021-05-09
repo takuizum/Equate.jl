@@ -20,11 +20,12 @@ function SummaryStats(F::NEAT)
     return df;
 end
 
-struct NEATEquateResult <: NEATEquateMethod
+mutable struct NEATEquateResult <: NEATEquateMethod
     method
     table
     synthetic
     estimates
+    data
 end
 
 """
@@ -51,13 +52,14 @@ function Tucker(X::NEAT, Y::NEAT; w₁ = length(X.rawX) / (length(X.rawX) + leng
     σ²sY = σy^2 + w₁*γ₂^2*(σxv^2-σyv^2) + w₁*w₂*γ₂^2*(μxv-μyv)^2
     # transformation
     slope = sqrt(σ²sY)/sqrt(σ²sX); intercept = μsY - slope*μsX
-    lYx = @. X.tabX.scale * slope + intercept
-    tbl = DataFrame(scaleX = X.tabX.scale, lYx = lYx)
+    lYx = @. X.tableX.scale * slope + intercept
+    tbl = DataFrame(scaleX = X.tableX.scale, lYx = lYx)
     return NEATEquateResult(
         :Tucker,
         tbl,
         DataFrame(Group = [1, 2], μ = [μsX, μsY], σ = [sqrt(σ²sX), sqrt(σ²sY)], γ = [γ₁, γ₂], w = [w₁, w₂]),
-        (slope = slope, intercept = intercept)
+        (slope = slope, intercept = intercept), 
+        (X = X, Y = Y)
     )
 end
 # Nonequivalent Groups : Levine under a classical congeneric model
@@ -92,13 +94,14 @@ function LevineCongeneric(X::NEAT, Y::NEAT; common = :external, w₁ = length(X.
     σ²sY = σy^2 + w₁*γ₂^2*(σxv^2-σyv^2) + w₁*w₂*γ₂^2*(μxv-μyv)^2
     # transformation
     slope = sqrt(σ²sY)/sqrt(σ²sX); intercept = μsY - slope*μsX
-    lYx = @. X.tabX.scale * slope + intercept
-    tbl = DataFrame(scaleX = X.tabX.scale, lYx = lYx)
+    lYx = @. X.tableX.scale * slope + intercept
+    tbl = DataFrame(scaleX = X.tableX.scale, lYx = lYx)
     return NEATEquateResult(
         :LevineCongeneric, 
         tbl,
         DataFrame(Group = [1, 2], μ = [μsX, μsY], σ = [sqrt(σ²sX), sqrt(σ²sY)], γ = [γ₁, γ₂], w = [w₁, w₂]),
-        (slope = slope, intercept = intercept)
+        (slope = slope, intercept = intercept), 
+        (X = X, Y = Y)
     )
 end
 # Nonequivalent Groups : Chained linear Observed Score Equating
@@ -128,13 +131,14 @@ function ChainedLinear(X::NEAT, Y::NEAT)
     # estimate
     slope = γ₂/γ₁
     intercept = μy + γ₂ *(μxv - μyv) - slope * μx
-    lYx = @. X.tabX.scale * slope + intercept
-    tbl =  DataFrame(scaleX = X.tabX.scale, lYx = lYx)
+    lYx = @. X.tableX.scale * slope + intercept
+    tbl =  DataFrame(scaleX = X.tableX.scale, lYx = lYx)
     return NEATEquateResult(
         :ChainedLinear, 
         tbl,
         DataFrame(Group = [1,2], γ = [γ₁, γ₂]),
-        (slope = slope, intercept = intercept)
+        (slope = slope, intercept = intercept), 
+        (X = X, Y = Y)
     )
 end
 
@@ -153,13 +157,14 @@ function ChainedMean(X::NEAT, Y::NEAT)
     # estimate
     slope = 1.0
     intercept = μy + γ₂ *(μxv - μyv) - slope * μx
-    lYx = @. X.tabX.scale * slope + intercept
-    tbl =  DataFrame(scaleX = X.tabX.scale, lYx = lYx)
+    lYx = @. X.tableX.scale * slope + intercept
+    tbl =  DataFrame(scaleX = X.tableX.scale, lYx = lYx)
     return NEATEquateResult(
         :ChainedMean, 
         tbl,
         DataFrame(Group = [1,2], γ = [γ₁, γ₂]),
-        (slope = slope, intercept = intercept)
+        (slope = slope, intercept = intercept), 
+        (X = X, Y = Y)
     )
 end
 # Nonequivalent Groups : Braun-Holland Linear Method
@@ -179,48 +184,49 @@ function BraunHolland(X::NEAT, Y::NEAT; w₁ = length(X.rawX) / (length(X.rawX) 
     W = w₁ + w₂
     w₁ = w₁ / W; w₂ = w₂ / W
     # prior (the weights from common part)
-    J = length(X.tabV.freq)
-    h₁ = X.tabV.prob
-    h₂ = Y.tabV.prob
+    J = length(X.tableV.freq)
+    h₁ = X.tableV.prob
+    h₂ = Y.tableV.prob
     # Conditional distribution
     conditionalX = X.marginal ./ sum(X.marginal)
     conditionalY = Y.marginal ./ sum(Y.marginal)
-    for v in 1:length(X.tabV.scale)
+    for v in 1:length(X.tableV.scale)
         conditionalX[:, v] ./= h₁[v]
     end
-    for v in 1:length(Y.tabV.scale)
+    for v in 1:length(Y.tableV.scale)
         conditionalY[:, v] ./= h₂[v]
     end
     # Marginal out
-    f₂x = zeros(Float64, length(X.tabX.freq))
-    g₁y = zeros(Float64, length(Y.tabX.freq))
-    for j in 1:length(X.tabX.scale)
+    f₂x = zeros(Float64, length(X.tableX.freq))
+    g₁y = zeros(Float64, length(Y.tableX.freq))
+    for j in 1:length(X.tableX.scale)
         f₂x[j] = conditionalX[j,:]'h₂
     end
-    for j in 1:length(Y.tabX.scale)
+    for j in 1:length(Y.tableX.scale)
         g₁y[j] = conditionalY[j,:]'h₁
     end
     # normalize
     f₂x = f₂x / sum(f₂x)
     g₁y = g₁y / sum(g₁y)
     # synthetic population
-    fsx = @. w₁ * X.tabX.prob + w₂ * f₂x; fsx = fsx ./ sum(fsx)
-    fsy = @. w₁ * g₁y + w₂ * Y.tabX.prob; fsy = fsy ./ sum(fsy)
-    @show f₂x, g₁y
+    fsx = @. w₁ * X.tableX.prob + w₂ * f₂x; fsx = fsx ./ sum(fsx)
+    fsy = @. w₁ * g₁y + w₂ * Y.tableX.prob; fsy = fsy ./ sum(fsy)
+    # @show f₂x, g₁y
     # synthetic pupulation parameter
-    μsx = fsx' * X.tabX.scale
-    σsx = sqrt(fsx' * (X.tabX.scale .- μsx) .^2)
-    μsy = fsy' * Y.tabX.scale
-    σsy = sqrt(fsy' * (Y.tabX.scale .- μsy) .^2)
+    μsx = fsx' * X.tableX.scale
+    σsx = sqrt(fsx' * (X.tableX.scale .- μsx) .^2)
+    μsy = fsy' * Y.tableX.scale
+    σsy = sqrt(fsy' * (Y.tableX.scale .- μsy) .^2)
     # external regression parameter
     slope = σsy / σsx; intercept = μsy - slope * μsx
-    lYx = @. X.tabX.scale * slope + intercept
-    tbl = DataFrame(scaleX = X.tabX.scale, lYx = lYx)
+    lYx = @. X.tableX.scale * slope + intercept
+    tbl = DataFrame(scaleX = X.tableX.scale, lYx = lYx)
     return NEATEquateResult(
         :BraunHolland, 
         tbl,
         DataFrame(Group = [1, 2], μ = [μsx, μsy], σ = [σsx, σsy], w = [w₁, w₂]),
-        (slope = slope, intercept = intercept)
+        (slope = slope, intercept = intercept), 
+        (X = X, Y = Y)
     )
 end
 
@@ -236,44 +242,45 @@ function FrequencyEstimation(X::NEAT, Y::NEAT; w₁ = length(X.rawX) / (length(X
     W = w₁ + w₂
     w₁ = w₁ / W; w₂ = w₂ / W
     # prior (the weights from common part)
-    J = length(X.tabV.freq)
-    h₁ = X.tabV.prob
-    h₂ = Y.tabV.prob
+    J = length(X.tableV.freq)
+    h₁ = X.tableV.prob
+    h₂ = Y.tableV.prob
     # Conditional distribution
     conditionalX = X.marginal ./ sum(X.marginal)
     conditionalY = Y.marginal ./ sum(Y.marginal)
-    for v in 1:length(X.tabV.scale)
+    for v in 1:length(X.tableV.scale)
         conditionalX[:, v] ./= h₁[v]
     end
-    for v in 1:length(Y.tabV.scale)
+    for v in 1:length(Y.tableV.scale)
         conditionalY[:, v] ./= h₂[v]
     end
     # Marginal out
-    f₂x = zeros(Float64, length(X.tabX.freq))
-    g₁y = zeros(Float64, length(Y.tabX.freq))
-    for j in 1:length(X.tabX.scale)
+    f₂x = zeros(Float64, length(X.tableX.freq))
+    g₁y = zeros(Float64, length(Y.tableX.freq))
+    for j in 1:length(X.tableX.scale)
         f₂x[j] = conditionalX[j,:]'h₂
     end
-    for j in 1:length(Y.tabX.scale)
+    for j in 1:length(Y.tableX.scale)
         g₁y[j] = conditionalY[j,:]'h₁
     end
     # normalize
     f₂x = f₂x / sum(f₂x)
     g₁y = g₁y / sum(g₁y)
     # synthetic population
-    fsx = @. w₁ * X.tabX.freq + w₂ * f₂x
-    fsy = @. w₁ * g₁y + w₂ * Y.tabX.freq
+    fsx = @. w₁ * X.tableX.freq + w₂ * f₂x
+    fsy = @. w₁ * g₁y + w₂ * Y.tableX.freq
     # Equipercentile Equating
-    ftX = FreqTab(DataFrame(scale = X.tabX.scale, freq = fsx, cumprob = cumsum(fsx) ./ sum(fsx)),
+    ftX = FreqTab(DataFrame(scale = X.tableX.scale, freq = fsx, cumprob = cumsum(fsx) ./ sum(fsx)),
                   X.rawX, X.intervalX, (; dummy = "dummy"))
-    ftY = FreqTab(DataFrame(scale = Y.tabX.scale, freq = fsy, cumprob = cumsum(fsy) ./ sum(fsy)),
+    ftY = FreqTab(DataFrame(scale = Y.tableX.scale, freq = fsy, cumprob = cumsum(fsy) ./ sum(fsy)),
                   Y.rawX, Y.intervalX, (; dummy = "dummy"))
     tbl = Equipercentile(ftX, ftY; case = case)
     return NEATEquateResult(
         :FrequencyEstimation, 
         tbl.table, 
         DataFrame(Group = [1, 2], μ = [mean(fsx), mean(fsy)], σ = [std(fsx), std(fsy)], w = [w₁, w₂]),
-        nothing
+        nothing, 
+        (X = X, Y = Y)
     )
 end
 
@@ -290,10 +297,10 @@ Refer to the resulting function as 𝑒Y2(𝑣).
 """
 function ChainedEquipercentile(X::NEAT, Y::NEAT; case = :lower)
     # Find equipercentile relationship for score V on the first population
-    ftX = freqtab(X.rawX; interval = X.intervalX, scale = X.tabX.scale)
-    ftXV = freqtab(X.rawV; interval = X.intervalV, scale = X.tabV.scale)
-    ftYV = freqtab(Y.rawV; interval = Y.intervalV, scale = Y.tabV.scale)
-    ftY = freqtab(Y.rawX; interval = Y.intervalX, scale = Y.tabX.scale)
+    ftX = freqtab(X.rawX; interval = X.intervalX, scale = X.tableX.scale)
+    ftXV = freqtab(X.rawV; interval = X.intervalV, scale = X.tableV.scale)
+    ftYV = freqtab(Y.rawV; interval = Y.intervalV, scale = Y.tableV.scale)
+    ftY = freqtab(Y.rawX; interval = Y.intervalX, scale = Y.tableX.scale)
     eV₁x = Equipercentile(ftX, ftXV; case = case)
     # Search percentile of score V on scale Y
     eYxu = zeros(Float64, length(eV₁x.table.scaleX))
@@ -317,7 +324,8 @@ function ChainedEquipercentile(X::NEAT, Y::NEAT; case = :lower)
         :ChainedEquipercentile, 
         tbl, 
         nothing, 
-        nothing
+        nothing, 
+        (X = X, Y = Y)
     )
 end
 #-----------------

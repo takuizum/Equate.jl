@@ -3,25 +3,25 @@ using StatsBase
 @testset "presmoothing" begin
     # df = 1
     smtab = presmoothing(sgtabX, Equate.fml₁)
-    m = smtab.tab.scale'smtab.tab.prob
+    m = smtab.table.scale'smtab.table.prob
     @test m ≈ mean(smtab.raw)
     # df = 2
     smtab = presmoothing(sgtabX, Equate.fml₂)
-    m = smtab.tab.scale'smtab.tab.prob
-    s = ((smtab.tab.scale .- m).^2)'smtab.tab.prob
+    m = smtab.table.scale'smtab.table.prob
+    s = ((smtab.table.scale .- m).^2)'smtab.table.prob
     @test s ≈ var(smtab.raw; corrected = false)
     # df = 3
     smtab = presmoothing(sgtabX, Equate.fml₃)
-    m = smtab.tab.scale'smtab.tab.prob
-    s = ((smtab.tab.scale .- m).^2)'smtab.tab.prob
-    sk = ((smtab.tab.scale .- m).^3)'smtab.tab.prob / sqrt(s)^3
+    m = smtab.table.scale'smtab.table.prob
+    s = ((smtab.table.scale .- m).^2)'smtab.table.prob
+    sk = ((smtab.table.scale .- m).^3)'smtab.table.prob / sqrt(s)^3
     # @test sk ≈ skewness(smtab.raw)
     @test round(sk; digits = 5) ≈ round(skewness(smtab.raw); digits = 5)
     # df = 4
     smtab = presmoothing(sgtabX, Equate.fml₄)
-    m = smtab.tab.scale'smtab.tab.prob
-    s = ((smtab.tab.scale .- m).^2)'smtab.tab.prob
-    ku = ((smtab.tab.scale .- m).^4)'smtab.tab.prob / s^2 -3
+    m = smtab.table.scale'smtab.table.prob
+    s = ((smtab.table.scale .- m).^2)'smtab.table.prob
+    ku = ((smtab.table.scale .- m).^4)'smtab.table.prob / s^2 -3
     @test ku ≈ kurtosis(smtab.raw)
 end
 

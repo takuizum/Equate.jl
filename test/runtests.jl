@@ -1,5 +1,7 @@
 using Equate
 using Test
+using Random: seed!
+using Bootstrap
 
 @testset "Equate.jl" begin
     # ReadData
@@ -14,6 +16,8 @@ using Test
     include("expandtable.jl")
     # coef
     include("coef.jl")
+    # SEE
+    include("SEE.jl")
 end
 
 
