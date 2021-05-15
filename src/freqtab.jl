@@ -3,9 +3,14 @@
 """
     FreqTab(tab, raw, interval stats)
 The basic struct for all equating.
+
+- `table` A data frame of test scales and thier frequaencies.
+- `raw` A raw vector. The order of examinees should correspond to another `FreqTab.raw`
+- `interval` The interval of the score scale.
+- `stats` Basic stats of the frequency table.
 """
-struct FreqTab <: EG
-    tab
+mutable struct FreqTab <: EG
+    table
     raw
     interval
     stats
@@ -22,12 +27,12 @@ end
 """
     freqtab(X; interval = 1.0, scale = minimum(X):interval:maximum(X))
     
-Create `FreqTab`, which is used for all equating methods in Equate package, for SG design.
+Create `FreqTab`, which is used for SG design methods in Equate package.
 
 # Arguments
 
-- `X` Vector of raw test score that dose not contain missing value.
-- `interval` The interval size of scale (must be Float64). Default is 1.0
+- `X` Vector of raw test score that dose not contain missing value. The order of examinees should correspond to another vector to be equated.
+- `interval` The interval size of scale (must be Float64). Default is 1.0. If `scale` was specified by user, ignored.
 - `scale` Vector or StepRange represents a scale of test score X.
 """
 function freqtab(X; interval = 1.0, scale = minimum(X):interval:maximum(X))
@@ -40,9 +45,9 @@ function freqtab(X; interval = 1.0, scale = minimum(X):interval:maximum(X))
 end
 
 # equivalent group design
-struct NEATFreqTab <: NEAT
-    tabX
-    tabV
+mutable struct NEATFreqTab <: NEAT
+    tableX
+    tableV
     rawX # independent form
     rawV # common form
     intervalX
@@ -55,7 +60,7 @@ end
 """
     freqtab(X, V;intervalX = 1.0, intervalV = 1.0, scaleX = minimum(X):intervalX:maximum(X), scaleV = minimum(V):intervalV:maximum(V))
 
-Create `SGFreqTab` for NEAT design.
+Create `NEATFreqTab` for NEAT design.
 
 # Arguments
 
@@ -81,13 +86,13 @@ function freqtab(X, V; intervalX = 1.0, intervalV = 1.0, scaleX = minimum(X):int
     cumprobx = cumsum(freqx)./ sum(freqx)
     freqv = map(j -> count(i -> i == j, V), scaleV)
     cumprobv = cumsum(freqv)./ sum(freqv)
-    tabX = DataFrame(scale = scaleX, freq = freqx, cumprob = cumprobx, prob = freqx ./ sum(freqx))
-    tabV = DataFrame(scale = scaleV, freq = freqv, cumprob = cumprobv, prob = freqv ./ sum(freqv))
+    tableX = DataFrame(scale = scaleX, freq = freqx, cumfreq = cumsum(freqx), cumprob = cumprobx, prob = freqx ./ sum(freqx))
+    tableV = DataFrame(scale = scaleV, freq = freqv, cumfreq = cumsum(freqv), cumprob = cumprobv, prob = freqv ./ sum(freqv))
     marginaltable = zeros(Int64, length(scaleX), length(scaleV))
     for (xi, xv) in enumerate(scaleX), (vi, vv) in enumerate(scaleV)
         marginaltable[xi,vi] = count(i -> i == vv, V[X .== xv])
     end
-    return NEATFreqTab(tabX, tabV, X, V, intervalX, intervalV, marginaltable, statsX, statsV)
+    return NEATFreqTab(tableX, tableV, X, V, intervalX, intervalV, marginaltable, statsX, statsV)
 end
 # Frequency table from smoothed frequency table.
 """
@@ -101,9 +106,9 @@ Create `NEATFreqTab` which has been smoothed (Log Linear or Kernel method).
 - `V` Smoothed `FreqTab` of anchor test.
 """
 function freqtab(X::EG, V::EG)
-    marginaltable = zeros(Int64, length(X.tab.scale), length(V.tab.scale))
-    for (xi, xv) in enumerate(X.tab.scale), (vi, vv) in enumerate(V.tab.scale)
+    marginaltable = zeros(Int64, length(X.table.scale), length(V.table.scale))
+    for (xi, xv) in enumerate(X.table.scale), (vi, vv) in enumerate(V.table.scale)
         marginaltable[xi,vi] = count(i -> i == vv, V.raw[X.raw .== xv])
     end
-    return NEATFreqTab(X.tab, V.tab, X.raw, V.raw, X.interval, V.interval, marginaltable)
+    return NEATFreqTab(X.table, V.table, X.raw, V.raw, X.interval, V.interval, marginaltable)
 end

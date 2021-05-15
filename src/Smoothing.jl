@@ -31,10 +31,10 @@ const fml₈ = @formula(freq ~ 1 + scale + scale^2 + scale^3 + scale^4 + scale^5
 const fml₉ = @formula(freq ~ 1 + scale + scale^2 + scale^3 + scale^4 + scale^5 + scale^6 + scale^7 + scale^8 + scale^9)
 const fml₁₀ = @formula(freq ~ 1 + scale + scale^2 + scale^3 + scale^4 + scale^5 + scale^6 + scale^7 + scale^8 + scale^9 + scale^10)
 
-struct SmoothedFreqTab <: EG
-    tab::DataFrame
-    raw::Vector
-    interval::Float64
+mutable struct SmoothedFreqTab <: EG
+    table
+    raw
+    interval
     fit
 end
 """
@@ -76,9 +76,9 @@ scale ^ 4    -2.67698e-5  2.25114e-6   -11.89    <1e-31  -3.1182e-5   -2.23576e-
 ```
 """
 function presmoothing(F::EG, fml)
-    fit1 = glm(fml, F.tab, Poisson(), LogLink())
-    freq = predict(fit1, DataFrame(scale = F.tab.scale))
-    tab = DataFrame(scale = F.tab.scale, freq = freq, cumfreq = cumsum(freq),
+    fit1 = glm(fml, F.table, Poisson(), LogLink())
+    freq = predict(fit1, DataFrame(scale = F.table.scale))
+    tab = DataFrame(scale = F.table.scale, freq = freq, cumfreq = cumsum(freq),
                     prob = freq ./ sum(freq), cumprob = cumsum(freq) ./ sum(freq))
     return SmoothedFreqTab(tab, F.raw, F.interval, fit1)
 end
@@ -134,7 +134,7 @@ function presmoothing(F::EG, degree::Int64)
     FIT = Any[]
     for d in 1:degree
         println("Fitting dof = $d model.")
-        fit = glm(fmls[d], F.tab, Poisson(), LogLink())
+        fit = glm(fmls[d], F.table, Poisson(), LogLink())
         push!(FIT, fit)
         AIC[d] = StatsBase.aic(fit)
         BIC[d] = StatsBase.bic(fit)
@@ -145,9 +145,9 @@ function presmoothing(F::EG, degree::Int64)
     DataFrame(degree = [1:1:degree;], aic = AIC, aicc = AICC, bic = BIC, loglik = LL, deviance = DEVIANCE, fit = FIT)
 end
 
-struct SmoothedNEATFreqTab <: NEAT
-    tabX
-    tabV
+mutable struct SmoothedNEATFreqTab <: NEAT
+    tableX
+    tableV
     rawX
     rawV
     intervalX
@@ -167,14 +167,14 @@ C is a degree of freedom
 """
 function presmoothing(F::NEAT, fmlX, fmlV)
     # Smoothing X (independent part)
-    fitX = glm(fmlX, F.tabX, Poisson(), LogLink())
-    freqX = predict(fitX, DataFrame(scale = F.tabX.scale))
-    tabX = DataFrame(scale = F.tabX.scale, freq = freqX, cumfreq = cumsum(freqX),
+    fitX = glm(fmlX, F.tableX, Poisson(), LogLink())
+    freqX = predict(fitX, DataFrame(scale = F.tableX.scale))
+    tabX = DataFrame(scale = F.tableX.scale, freq = freqX, cumfreq = cumsum(freqX),
                     prob = freqX ./ sum(freqX), cumprob = cumsum(freqX) ./ sum(freqX))
     # Smoothing V (common part)
-    fitV = glm(fmlV, F.tabV, Poisson(), LogLink())
-    freqV = predict(fitV, DataFrame(scale = F.tabV.scale))
-    tabV = DataFrame(scale = F.tabV.scale, freq = freqV, cumfreq = cumsum(freqV),
+    fitV = glm(fmlV, F.tableV, Poisson(), LogLink())
+    freqV = predict(fitV, DataFrame(scale = F.tableV.scale))
+    tabV = DataFrame(scale = F.tableV.scale, freq = freqV, cumfreq = cumsum(freqV),
                     prob = freqV ./ sum(freqV), cumprob = cumsum(freqV) ./ sum(freqV))
     return SmoothedNEATFreqTab(tabX, tabV, F.rawX, F.rawV, F.intervalX, F.intervalV, fitX, fitV, F.marginal)
 end
@@ -185,13 +185,13 @@ function RjX(x, xⱼ, a, μ, hX)
     return (x - a * xⱼ - (1-a)*μ) / (a*hX)
 end
 struct KernelFreqTab <: EG
-    tab::DataFrame
-    raw::Vector
-    interval::Float64
-    Bandwidth::Float64
+    taboe
+    raw
+    interval
+    Bandwidth
 end
 """
-    KernelSmoothing(X::SmoothedFreqTab; kernel = :Gaussian, hX = 0.622, scale = X.tab.scale)
+    KernelSmoothing(X::SmoothedFreqTab; kernel = :Gaussian, hX = 0.622, scale = X.table.scale)
 
 Returns Kernel smoothed frequency table as `KernelFreqTab`.
 
@@ -212,17 +212,17 @@ Returns Kernel smoothed frequency table as `KernelFreqTab`.
 In the kernel smoothing, the choice of bandwidth `hX` is an important consideration. When bandwidth is large, the smoothed distribution becomes linear equating fucnction. Contrary, bandwidth is small, it becomes spikye shaped distribution. We recommend to use default value `hX = 6.22` or select it by using `EstBandwidth`.
 """
 function KernelSmoothing(X::EG; kernel = :Gaussian, hX = 0.622, newint = X.interval/100)
-    scale = (minimum(X.tab.scale) - X.interval/2):newint:(maximum(X.tab.scale) + X.interval/2)
+    scale = (minimum(X.table.scale) - X.interval/2):newint:(maximum(X.table.scale) + X.interval/2)
     # hX = bandwidth of cumulative distribution function
-    N = sum(X.tab.freq)
+    N = sum(X.table.freq)
     μ = mean(X.raw); σ² = var(X.raw)
     a² = σ² / (σ² + hX^2)
     a = sqrt(a²)
     𝒇hX = zeros(Float64, length(scale))
     FhX = zeros(Float64, length(scale))
-    for (i, x) in enumerate(scale), (j, xⱼ) in enumerate(X.tab.scale)
-        𝒇hX[i] += X.tab.prob[j]*pdf.(Normal(0, 1), RjX(x, xⱼ, a, μ, hX)) / (a*hX)
-        FhX[i] += X.tab.prob[j]*cdf.(Normal(0, 1), RjX(x, xⱼ, a, μ, hX))
+    for (i, x) in enumerate(scale), (j, xⱼ) in enumerate(X.table.scale)
+        𝒇hX[i] += X.table.prob[j]*pdf.(Normal(0, 1), RjX(x, xⱼ, a, μ, hX)) / (a*hX)
+        FhX[i] += X.table.prob[j]*cdf.(Normal(0, 1), RjX(x, xⱼ, a, μ, hX))
     end
     𝒇hX = 𝒇hX ./ sum(𝒇hX) # normalize
     tbl = DataFrame(scale = scale, freq = N .* 𝒇hX, cunfreq = cumsum(N .* 𝒇hX), prob = 𝒇hX, cumprob = cumsum(𝒇hX))
@@ -231,16 +231,16 @@ end
 
 function BandwidthPenalty(hX, X::SmoothedFreqTab, lprob, rprob, K; kernel = :Gaussian)
     hX = exp(hX[1])
-    r = X.tab.prob
+    r = X.table.prob
     μ = mean(X.raw); σ² = var(X.raw)
     a² = σ² / (σ² + hX^2)
     a =sqrt(a²)
-    𝒇hX = zeros(Float64, length(X.tab.scale))
-    r𝒇′hX = zeros(Float64, length(X.tab.scale))
-    l𝒇′hX = zeros(Float64, length(X.tab.scale))
-    for (i, x) in enumerate(X.tab.scale), (j, xⱼ) in enumerate(X.tab.scale)
+    𝒇hX = zeros(Float64, length(X.table.scale))
+    r𝒇′hX = zeros(Float64, length(X.table.scale))
+    l𝒇′hX = zeros(Float64, length(X.table.scale))
+    for (i, x) in enumerate(X.table.scale), (j, xⱼ) in enumerate(X.table.scale)
         R = RjX(x, xⱼ, a, μ, hX)
-        𝒇hX[i] += X.tab.prob[j]*pdf.(Normal(0, 1), R) / (a*hX)
+        𝒇hX[i] += X.table.prob[j]*pdf.(Normal(0, 1), R) / (a*hX)
         r𝒇′hX[i] -= rprob[j]*pdf.(Normal(0, 1), R) / (a*hX)^2 * R
         l𝒇′hX[i] -= lprob[j]*pdf.(Normal(0, 1), R) / (a*hX)^2 * R
     end
@@ -264,7 +264,7 @@ Optimize information.
 
 """
 function EstBandwidth(X::SmoothedFreqTab; kernel = :Gaussian, K = 1)
-    x = X.tab.scale
+    x = X.table.scale
     lscore = x .- X.interval/4
     rscore = x .+ X.interval/4
     lpred = predict(X.fit, DataFrame(scale = lscore))
