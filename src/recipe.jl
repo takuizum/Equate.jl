@@ -1,34 +1,27 @@
 # Check score distributions
+
+function shorten_stats(x)
+    txt = @sprintf "N:%i, Mis:%i, Min:%i, Max:%i, μ:%2.2f, σ:%2.2f" x.N x.Missing x.min x.max x.μ x.σ
+    return txt
+end
+
 @recipe function f(x::FreqTab)
-    seriestype := :line
-    linecolor --> :gray
-    @series begin
-        label --> ""
-        seriestype := :scatter
-        markershape --> :x
-        markercolor --> :black
-        x.tab.scale, x.tab.freq
-    end
-    label --> "Empirical probability"
-    x.tab.scale, x.tab.freq
+    seriestype := :bar
+    linecolor --> :black
+    fillcolor --> :transparent
+    label --> ""
+    title --> shorten_stats(x.stats)
+    x.table.scale, x.table.freq
 end
 
 @recipe function f(x::SmoothedFreqTab)
     label --> "Smoothed degree = $(length(coef(x.fit))-1)"
-    x.tab.scale, x.tab.freq
+    x.table.scale, x.table.freq
 end
 
 @recipe function f(x::KernelFreqTab)
     label --> "Kernel smoothed observed probability"
-    x.tab.scale, x.tab.freq
-end
-
-# SG design
-@recipe function f(x::SGFreqTab)
-    label --> "Marginal Histogram under the SG design"
-    seriestype := :heatmap
-    seriescolor --> cgrad([:white, :gray, :black])
-    x.marginal
+    x.table.scale, x.table.freq
 end
 
 # @recipe function f(x::SGFreqTab)
@@ -54,7 +47,7 @@ end
 #         seriestype := :line
 #         seriescolor := :black
 #         subplot := 1
-#         x.tabX.scale, x.tabX.freq
+#         x.tableX.scale, x.tableX.freq
 #     end
 #     # Hist : yaxis
 #     @series begin
@@ -62,65 +55,24 @@ end
 #         seriescolor := :black
 #         orientation := :h
 #         subplot := 3
-#         x.tabV.scale, x.tabV.freq
+#         x.tableV.scale, x.tableV.freq
 #     end
 # end
 
 # Show result of equating
-@recipe function f(x::ResultLinear)
+@recipe function f(x::SGEquateResult)
     label --> "Linear"
     xguide --> "Test X"
     yguide --> "Test Y (scaled)"
     legend --> :topleft
     x.table.lYx, x.table.scaleX
 end
-
-@recipe function f(x::ResultEquipercentile)
-    label --> "Equipercentile"
-    xguide --> "Test X"
-    yguide --> "Test Y (scaled)"
-    legend --> :topleft
-    x.table.eYx, x.table.scaleX
-end
-
 # NEAT design
-@recipe function f(x::ResultFrequencyEstimation)
-    label --> "Frequency Estimation"
-    xguide --> "Test X"
-    yguide --> "Test Y (scaled)"
-    legend --> :topleft
-    x.table.eYx, x.table.scaleX
-end
-
-@recipe function f(x::ResultChainedLinear)
-    label --> "Chained Linear"
-    xguide --> "Test X"
-    yguide --> "Test Y (scaled)"
-    legend --> :topleft
-    x.table.lYx, x.table.scaleX
-end
-
-@recipe function f(x::ResultTucker)
+@recipe function f(x::NEATEquateResult)
     label --> "Tucker"
     xguide --> "Test X"
     yguide --> "Test Y (scaled)"
     legend --> :topleft
     x.table.lYx, x.table.scaleX
-end
-
-@recipe function f(x::ResultBraunHolland)
-    label --> "Braun & Holland"
-    xguide --> "Test X"
-    yguide --> "Test Y (scaled)"
-    legend --> :topleft
-    x.table.lYx, x.table.scaleX
-end
-
-@recipe function f(x::ResultChainedEquipercentile)
-    label --> "Chained Equipercentile"
-    xguide --> "Test X"
-    yguide --> "Test Y (scaled)"
-    legend --> :topleft
-    x.table.eYx, x.table.scaleX
 end
 

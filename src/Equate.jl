@@ -13,6 +13,7 @@ import StatsBase: coef
 using Printf
 import Base: copy, show
 import Bootstrap: draw!
+using RecipesBase
 
 export
     # Basic function
@@ -81,6 +82,7 @@ include("coef.jl")
 include("ExpandTable.jl")
 include("show.jl")
 include("SEE.jl")
+include("recipe.jl")
 
 """
     A Julia package for test equating.
