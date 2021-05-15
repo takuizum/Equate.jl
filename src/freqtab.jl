@@ -15,7 +15,7 @@ function basicstats(X)
     N = length(X)
     Nm = sum(X .=== missing)
     mins, maxs = minimum(X), maximum(X)
-    (N = N, Missing = Nm, min = mins, maxs = maxs, μ = mean(X), σ = std(X), kurtosis = kurtosis(X), skewness = skewness(X))
+    (N = N, Missing = Nm, min = mins, max = maxs, μ = mean(X), σ = std(X), kurtosis = kurtosis(X), skewness = skewness(X))
 end
 
 # Frequaency table for equivalent group design
