@@ -1,20 +1,24 @@
 # Natural Round
 round2(x; digits = 0) = sign(x) * floor( abs(x) * 10.0^digits + 0.5 ) / (10.0^digits)
-# Percentile Rank Function
+
+# Cumulative distribution function
 function CDF(x, F::EG)
     if x < minimum(F.table.scale) return 0 end
     if x > maximum(F.table.scale) return 1 end
     F.table.cumprob[F.table.scale .== x][1]
 end
+
+# Percentile rank function
 function PRF(x, F::EG)
     if x < (minimum(F.table.scale) - F.interval/2.0) return 0.0 end
     if x ≥ (maximum(F.table.scale) + F.interval/2.0) return 100.0 end
     x′ = round2(x)
-    Fx1 = CDF(x′-F.interval, F)#F.table.cumfreq[F.table.scale .== (x⃰-1.0)]
-    Fx = CDF(x′, F)#F.table.cumfreq[F.table.scale .== x⃰]
+    Fx1 = CDF(x′-F.interval, F)
+    Fx = CDF(x′, F)
     P = 100*(Fx1+(x-x′+F.interval/2.0)*(Fx-Fx1))[1]
     return P
 end
+
 # Percentile Function
 function p_search_descend(P, F::EG, offset)
     x = nothing;iter = length(F.table.scale)
@@ -32,6 +36,8 @@ function p_search_ascend(P, F::EG, offset)
     end
     return x
 end
+
+# The inverse of the percentile rank function (Percentile function)
 function PFu(P, F::EG)
     if P ≥ 100.0 return (maximum(F.table.scale) + .5) end
     xu = P > 50.0 ? p_search_descend(P, F, 1) : p_search_ascend(P, F, 0)
@@ -44,6 +50,7 @@ function PFl(P, F::EG)
     x = (P/100 - CDF(xl, F)) / (CDF(xl+F.interval, F) - CDF(xl, F))
     return isinf(x) || isnan(x) ? xl + F.interval/2.0 : x + xl + F.interval/2.0
 end
+
 # equipercentile equating
 mutable struct SGEquateResult <: SGEquateMethod
     method
