@@ -1,7 +1,7 @@
 name = "Equate"
 uuid = "1f4a9958-6928-474c-bcb2-b5c430b26db6"
 authors = ["Takumi Shibuya"]
-version = "0.1.9"
+version = "0.1.10"
 
 [deps]
 Bootstrap = "e28b5b4c-05e8-5b66-bc03-6f0c0a0a06e0"
