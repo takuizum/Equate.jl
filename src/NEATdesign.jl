@@ -64,11 +64,45 @@ function Tucker(X::NEAT, Y::NEAT; w₁ = length(X.rawX) / (length(X.rawX) + leng
 end
 # Nonequivalent Groups : Levine under a classical congeneric model
 """
-    LevineCongeneric(X::NEAT, Y::NEAT; common = :external, w₁ = length(X.rawX) / (length(X.rawX) + length(Y.rawX)), w₂ = 1.0 - w₁)
-
-Levine methods under a classical congeneric model.
+    LevineTrueScore(X::NEAT, Y::NEAT; common = :external)
+Levine true score method applied to observed scores. This algorithm assumes Classical Congeneric model, which dosen't need to estimate true scores.
 """
-function LevineCongeneric(X::NEAT, Y::NEAT; common = :external, w₁ = length(X.rawX) / (length(X.rawX) + length(Y.rawX)), w₂ = 1.0 - w₁)
+function LevineTrueScore(X::NEAT, Y::NEAT; common = :external)
+    # test score
+    x = X.rawX; xv = X.rawV
+    y = Y.rawX; yv = Y.rawV
+    # ObservableStats
+    μx, σx, μxv, σxv, covxv, corxv = ObservableStats(X)
+    μy, σy, μyv, σyv, covyv, coryv = ObservableStats(Y)
+    # regression slope
+    if common == :internal
+        γ₁ = σx^2 / covxv
+        γ₂ = σy^2 / covyv
+    elseif common == :external
+        γ₁ = (σx^2 + covxv) / (σxv^2 + covxv)
+        γ₂ = (σy^2 + covyv) / (σyv^2 + covyv)
+    else
+        println("`common` argument can recieve only :internal or :external")
+    end
+    # doesn't use the synthetic population.
+    # transformation
+    slope = γ₂/γ₁ ; intercept = μy + γ₂ * (μxv - μyv) - slope*μx
+    lYx = @. X.tableX.scale * slope + intercept
+    tbl = DataFrame(scaleX = X.tableX.scale, lYx = lYx)
+    return NEATEquateResult(
+        :LevineTrueScore, 
+        tbl,
+        DataFrame(Group = [1, 2], μ = [μx, μy], σ = [σx, σy], γ = [γ₁, γ₂], w = [missing, missing]),
+        (slope = slope, intercept = intercept), 
+        (X = X, Y = Y)
+    )
+end
+
+"""
+
+Levine observed score method. This algorithm assumes Classical Congeneric model, which dosen't need to estimate true scores.
+"""
+function LevineObservedScore(X::NEAT, Y::NEAT; common = :external, w₁ = length(X.rawX) / (length(X.rawX) + length(Y.rawX)), w₂ = 1.0 - w₁)
     W = w₁ + w₂
     w₁ = w₁ / W; w₂ = w₂ / W
     # test score
@@ -97,13 +131,14 @@ function LevineCongeneric(X::NEAT, Y::NEAT; common = :external, w₁ = length(X.
     lYx = @. X.tableX.scale * slope + intercept
     tbl = DataFrame(scaleX = X.tableX.scale, lYx = lYx)
     return NEATEquateResult(
-        :LevineCongeneric, 
+        :LevineObservedScore, 
         tbl,
         DataFrame(Group = [1, 2], μ = [μsX, μsY], σ = [sqrt(σ²sX), sqrt(σ²sY)], γ = [γ₁, γ₂], w = [w₁, w₂]),
         (slope = slope, intercept = intercept), 
         (X = X, Y = Y)
     )
 end
+
 # Nonequivalent Groups : Chained linear Observed Score Equating
 """
     ChainedLinear(X::NEAT, Y::NEAT)

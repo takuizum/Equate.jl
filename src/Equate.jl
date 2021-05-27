@@ -24,6 +24,8 @@ export
     Linear,
     Tucker,
     LevineCongeneric,
+    LevineObservedScore,
+    LevineTrueScore,
     ChainedLinear,
     FrequencyEstimation,
     BraunHolland,

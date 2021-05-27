@@ -14,22 +14,30 @@ using Statistics, StatsBase
     res = Tucker(neattabX, neattabY)
     @test round(coef(res)[1]; digits = 4) == 1.0292
     @test round(coef(res)[2]; digits = 4) == .5378
-    # popXonY = ExpandTable(res.table.lYx, neattabX.tabX.freq)
-    # @test round(mean(popXonY); digits = 4) == 16.8153
 end
 
-@testset "LevineCongeneric (external) " begin
-    res = LevineCongeneric(neattabX, neattabY; common = :external)
+@testset "LevineObservedScore (external, not show in K&B) " begin
+    res = LevineObservedScore(neattabX, neattabY; common = :external)
     @test round(coef(res)[1]; digits = 4) == 1.0168
     @test round(coef(res)[2]; digits = 4) == .3257
-    # popXonY = ExpandTable(res.table.lYx, neattabX.tabX.freq)
-    # @test round(mean(popXonY); digits = 4) == 16.2485
 end
 
-@testset "LevineCongeneric (internal) " begin
-    res = LevineCongeneric(neattabX, neattabY; common = :internal)
+@testset "LevineObservedScore (internal) " begin
+    res = LevineObservedScore(neattabX, neattabY; common = :internal)
     @test round(coef(res)[1]; digits = 4) == 1.0110
     @test round(coef(res)[2]; digits = 4) == .2514
+end
+
+@testset "LevineTrueScore (external, not show in K&B) " begin
+    res = LevineTrueScore(neattabX, neattabY; common = :external)
+    @test round(coef(res)[1]; digits = 4) == 1.0165
+    @test round(coef(res)[2]; digits = 4) == .331
+end
+
+@testset "LevineTrueScore (internal) " begin
+    res = LevineTrueScore(neattabX, neattabY; common = :internal)
+    @test round(coef(res)[1]; digits = 4) == 1.0086
+    @test round(coef(res)[2]; digits = 4) == .2912
 end
 
 @testset "ChainedLinear" begin

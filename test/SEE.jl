@@ -69,7 +69,7 @@ end
 end
 
 @testset "Bootstrap.bootstrap for NEAT" begin
-    for f in [Tucker, LevineCongeneric, ChainedLinear, BraunHolland, FrequencyEstimation, ChainedEquipercentile]
+    for f in [Tucker, LevineObservedScore, LevineTrueScore, ChainedLinear, BraunHolland, FrequencyEstimation, ChainedEquipercentile]
         res = f(neattabX, neattabY)
         bsres = bootstrap(x -> coef(f(x...)), res.data, BasicSampling(50))
         @test true
