@@ -185,7 +185,7 @@ function RjX(x, xⱼ, a, μ, hX)
     return (x - a * xⱼ - (1-a)*μ) / (a*hX)
 end
 struct KernelFreqTab <: EG
-    taboe
+    table
     raw
     interval
     Bandwidth
