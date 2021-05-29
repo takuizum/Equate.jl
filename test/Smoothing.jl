@@ -39,3 +39,22 @@ end
     @test fit isa DataFrame
 end
 
+
+
+neattabX.marginal
+longtab = DataFrame(
+    s = reshape(neattabX.marginal, (37*13, 1))[:],
+    x = vcat(fill(neattabX.tableX.scale, length(neattabX.tableV.scale))...),
+    v = vcat(fill.(neattabX.tableV.scale, length(neattabX.tableX.scale))...)
+)
+
+@formula(s ~ x^1*v^1 + x^2*v^2)
+fit1 = glm(@formula(s ~ x^1*v^1 + x^2*v^2), longtab, Poisson(), LogLink())
+freq = predict(fit1, longtab)
+smmarginalfreq = reshape(freq, (37, 13))
+
+neattabX.tableX
+plot(neattabX.tableX.freq)
+plot!(sum(smmarginalfreq, dims = 2))
+plot(neattabX.tableV.freq)
+plot!(sum(smmarginalfreq, dims = 1)[:])

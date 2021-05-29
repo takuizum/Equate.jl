@@ -31,19 +31,41 @@ const fml₈ = @formula(freq ~ 1 + scale + scale^2 + scale^3 + scale^4 + scale^5
 const fml₉ = @formula(freq ~ 1 + scale + scale^2 + scale^3 + scale^4 + scale^5 + scale^6 + scale^7 + scale^8 + scale^9)
 const fml₁₀ = @formula(freq ~ 1 + scale + scale^2 + scale^3 + scale^4 + scale^5 + scale^6 + scale^7 + scale^8 + scale^9 + scale^10)
 
-mutable struct SmoothedFreqTab <: EG
+mutable struct SmoothedSGFreqTab <: EG
     table
     raw
     interval
     fit
+    method
+    model
+end
+
+mutable struct SmoothedNEATFreqTab <: NEAT
+    tableX
+    tableV
+    rawX # independent form
+    rawV # common form
+    intervalX
+    intervalV
+    marginal # conditional freqency
+    statsX
+    statsV
+    method
+    model
 end
 """
-    presmoothing(F::FreqTab, @LogLinearFormula(df::Int64))
+    presmoothing(F::EG, fml)
+    presmoothing(F::EG, UpToDgree::Int64)
+    presmoothing(F::NEAT, fml)
 
-Returns presmoothed frequency table as `SmoothedFreqTab` and `glm` fitted object.
 
-Preserving first C moments of original frequency data, passed `LogLinearFormula(C)` to `fml`.
-C is a degree of freedom
+Returns presmoothed frequency table as `SmoothedSG(NEAT)FreqTab` and `glm` fitted object.
+
+Preserving first C moments of original frequency data. `LogLinearFormula(C)` creates `fml`.
+
+C is a degree of freedom.
+
+For more instance, use, `Equate.fml₆` to fit the log linear model with 6 dof.
 
 # Examples
 ```julia
@@ -80,7 +102,42 @@ function presmoothing(F::EG, fml)
     freq = predict(fit1, DataFrame(scale = F.table.scale))
     tab = DataFrame(scale = F.table.scale, freq = freq, cumfreq = cumsum(freq),
                     prob = freq ./ sum(freq), cumprob = cumsum(freq) ./ sum(freq))
-    return SmoothedFreqTab(tab, F.raw, F.interval, fit1)
+    return SmoothedSGFreqTab(tab, F.raw, F.interval, fit1, :loglinear, fml)
+end
+
+function presmoothing(F::NEAT, fml)
+    longtab = DataFrame(
+        s = reshape(F.marginal, (*(size(F.marginal)...), 1))[:],
+        x = vcat(fill(F.tableX.scale, length(F.tableV.scale))...),
+        v = vcat(fill.(F.tableV.scale, length(F.tableX.scale))...)
+    )
+    fit1 = glm(@formula(s ~ x^1*v^1 + x^2*v^2), longtab, Poisson(), LogLink())
+    freq = predict(fit1, longtab)
+    marginalfreq = reshape(freq, size(F.marginal))
+    freqX = sum(marginalfreq, dims = 2)
+    freqV = sum(marginalfreq, dims = 1)[:]
+    tabX = DataFrame(scale = F.tableX.scale, freq = freqX, cumfreq = cumsum(freqX),
+                     prob = freqX ./ sum(freqX), cumprob = cumsum(freqX) ./ sum(freqX))
+    tabV = DataFrame(scale = F.tableV.scale, freq = freqV, cumfreq = cumsum(freqV),
+                     prob = freqV ./ sum(freqV), cumprob = cumsum(freqV) ./ sum(freqV))
+    return SmoothedNEATFreqTab(
+        tabX, tabV,
+        F.rawX, F.rawV,
+        F.intervalX, F.intervalV,
+        marginalfreq, 
+        basicstats(tabX, F.rawX), basicstats(tabV, F.rawV)
+    )
+end
+
+function basicstats(F::DataFrame, X)
+    N = sum(F.freq)
+    Nm = sum(X .=== missing)
+    mins, maxs = minimum(X), maximum(X)
+    μ = F.scale'F.freq
+    σ = sqrt(sum((F.scale .- μ).^2 .* F.freq))
+    k = sum((F.scale .- μ).^3 .* F.prob) / σ^3
+    s = sum((F.scale .- μ).^4 .* F.prob) / σ^4 - 3
+    (N = N, Missing = Nm, min = mins, max = maxs, μ = μ, σ = σ, kurtosis = k, skewness = s)
 end
 
 """
@@ -145,22 +202,11 @@ function presmoothing(F::EG, degree::Int64)
     DataFrame(degree = [1:1:degree;], aic = AIC, aicc = AICC, bic = BIC, loglik = LL, deviance = DEVIANCE, fit = FIT)
 end
 
-mutable struct SmoothedNEATFreqTab <: NEAT
-    tableX
-    tableV
-    rawX
-    rawV
-    intervalX
-    intervalV
-    fitX
-    fitV
-    marginal
-end
 """
     presmoothing(F::NEAT, LogLinearFormula(df::Int64), LogLinearFormula(df::Int64))
 
-Returns presmoothed frequency table as `SmoothedNEATFreqTab` and `glm` fitted object, 
-but `interval` and `marginal` elements, which are returned, are not based on smoothed score.
+Returns presmoothed frequency table as `SmoothedNEATFreqTab`, but `interval` and `marginal` elements are not based on smoothed score.
+This method fit the loglinear model for individual, unidimensional frequency table.
 
 Preserving first C moments of original frequency data, passed `LogLinearFormula(C)` to `fml`.
 C is a degree of freedom
@@ -191,7 +237,7 @@ struct KernelFreqTab <: EG
     Bandwidth
 end
 """
-    KernelSmoothing(X::SmoothedFreqTab; kernel = :Gaussian, hX = 0.622, scale = X.table.scale)
+    KernelSmoothing(X::EG; kernel = :Gaussian, hX = 0.622, scale = X.table.scale)
 
 Returns Kernel smoothed frequency table as `KernelFreqTab`.
 
@@ -229,7 +275,7 @@ function KernelSmoothing(X::EG; kernel = :Gaussian, hX = 0.622, newint = X.inter
     return KernelFreqTab(tbl, X.raw, X.interval, hX)
 end
 
-function BandwidthPenalty(hX, X::SmoothedFreqTab, lprob, rprob, K; kernel = :Gaussian)
+function BandwidthPenalty(hX, X::EG, lprob, rprob, K; kernel = :Gaussian)
     hX = exp(hX[1])
     r = X.table.prob
     μ = mean(X.raw); σ² = var(X.raw)
@@ -263,7 +309,7 @@ Estimate optimal bandwidth `hX` in Gaussian kernel.
 Optimize information.
 
 """
-function EstBandwidth(X::SmoothedFreqTab; kernel = :Gaussian, K = 1)
+function EstBandwidth(X::EG; kernel = :Gaussian, K = 1)
     x = X.table.scale
     lscore = x .- X.interval/4
     rscore = x .+ X.interval/4
