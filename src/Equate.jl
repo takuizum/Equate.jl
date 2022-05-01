@@ -3,16 +3,54 @@ module Equate
 
 using DataFrames: DataFrame
 using Statistics: mean, std, cov, cor, var
-using StatsBase: kurtosis, skewness
 using Distributions: Poisson, Normal, pdf, cdf
-using Optim: optimize, BFGS
+using Optim: optimize, BFGS, Newton
 using GLM: glm, predict, @formula, LogLink, coef
 using StatsModels: TableRegressionModel
 using StatsBase
-import StatsBase: coef
+using StatsFuns
 using Printf
+
+import StatsBase: coef
 import Base: copy, show
 import Bootstrap: draw!
+
+abstract type EquateDesign end
+"""
+    EG
+Equivalent (single) group design. 
+If the population of 2 tests is identical, the test design will be called the single group design.
+"""
+abstract type EG <: EquateDesign end
+"""
+    NEAT
+Non-Equivalent group with Anchor Test design.
+"""
+abstract type NEAT <: EquateDesign end
+abstract type EquateMethod end
+abstract type SGEquateMethod <: EquateMethod end
+abstract type NEATEquateMethod <: EquateMethod end
+
+abstract type IRTEquateMethod <: EquateMethod end
+
+## IRT equate
+include("freqtab.jl")
+include("SGdesign.jl")
+include("NEATdesign.jl")
+include("Smoothing.jl")
+include("coef.jl")
+include("ExpandTable.jl")
+include("show.jl")
+include("SEE.jl")
+
+## IRT eauate
+include("IRTmodel.jl")
+include("lossfunctions.jl")
+include("DescriptiveStatisticsMethods.jl")
+include("CharacteristicCurveMethods.jl")
+
+## Data
+include("DemoData.jl")
 
 export
     # Basic function
@@ -57,32 +95,22 @@ export
 
     # struct
     NEATEquateResult, 
-    SGEquateResult
+    SGEquateResult, 
 
-abstract type EquateDesign end
-"""
-    EG
-Equivalent (single) group design. 
-If the population of 2 tests is identical, the test design will be called the single group design.
-"""
-abstract type EG <: EquateDesign end
-"""
-    NEAT
-Non-Equivalent group with Anchor Test design.
-"""
-abstract type NEAT <: EquateDesign end
-abstract type EquateMethod end
-abstract type SGEquateMethod <: EquateMethod end
-abstract type NEATEquateMethod <: EquateMethod end
+    # IRTmodel
+    Logistic1, 
+    Graded, 
+    IRF, 
+    ERF, 
+    loglik, 
+    lt!, 
 
-include("freqtab.jl")
-include("SGdesign.jl")
-include("NEATdesign.jl")
-include("Smoothing.jl")
-include("coef.jl")
-include("ExpandTable.jl")
-include("show.jl")
-include("SEE.jl")
+    # lossfunctions
+    SLdiff, 
+    Hdiff
+
+    # DescriptiveStatisticsMethods
+
 
 """
     A Julia package for test equating.
